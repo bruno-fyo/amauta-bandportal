@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { put, del } from '@vercel/blob'
+import { del } from '@vercel/blob'
 import { and, arrayContains, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { assets, type Asset, type Role } from '@/lib/db/schema'
@@ -44,55 +44,49 @@ export async function getAllAssets(): Promise<Asset[]> {
   return db.select().from(assets).orderBy(desc(assets.createdAt))
 }
 
-// Crear un asset subiendo el archivo a Vercel Blob (privado). Solo admin.
-export async function createAsset(formData: FormData): Promise<ActionResult> {
+// Datos del archivo ya subido a Vercel Blob desde el navegador.
+export type NewAssetInput = {
+  title: string
+  description?: string
+  category: string
+  fileType: string
+  tags: string[]
+  visibility: Role[]
+  fileName: string
+  filePathname: string
+  fileUrl: string
+  fileSize: number
+}
+
+// Guarda el registro del asset en la base de datos tras una carga directa al
+// Blob. Solo admin. El archivo ya fue subido por el cliente vía /api/assets/upload.
+export async function saveAssetRecord(input: NewAssetInput): Promise<ActionResult> {
   try {
     const admin = await requireAdmin()
 
-    const title = String(formData.get('title') ?? '').trim()
-    const description = String(formData.get('description') ?? '').trim()
-    const category = String(formData.get('category') ?? '').trim()
-    const fileType = String(formData.get('fileType') ?? '').trim()
-    const tagsRaw = String(formData.get('tags') ?? '').trim()
-    const visibility = formData.getAll('visibility').map(String) as Role[]
-    const file = formData.get('file') as File | null
+    const title = input.title.trim()
+    const category = input.category.trim()
+    const fileType = input.fileType.trim()
+    const visibility = input.visibility
 
     if (!title) return { ok: false, error: 'El título es obligatorio.' }
     if (!category) return { ok: false, error: 'Seleccioná una categoría.' }
     if (!fileType) return { ok: false, error: 'Seleccioná el tipo de archivo.' }
     if (visibility.length === 0)
       return { ok: false, error: 'Seleccioná al menos un rol con visibilidad.' }
-    if (!file || file.size === 0)
-      return { ok: false, error: 'Adjuntá un archivo para cargar.' }
-
-    const tags = tagsRaw
-      ? tagsRaw.split(',').map((t) => t.trim()).filter(Boolean)
-      : []
-
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      return {
-        ok: false,
-        error:
-          'El almacenamiento de archivos (Vercel Blob) todavía no está conectado. Conectá la integración Blob desde Ajustes para poder subir archivos.',
-      }
-    }
-
-    // Subida a Vercel Blob.
-    const blob = await put(`assets/${category}/${file.name}`, file, {
-      access: 'public',
-      addRandomSuffix: true,
-    })
+    if (!input.fileUrl || !input.filePathname)
+      return { ok: false, error: 'Falta la información del archivo subido.' }
 
     await db.insert(assets).values({
       title,
-      description: description || null,
+      description: input.description?.trim() || null,
       category,
       fileType,
-      fileName: file.name,
-      filePathname: blob.pathname,
-      fileUrl: blob.url,
-      fileSize: file.size,
-      tags,
+      fileName: input.fileName,
+      filePathname: input.filePathname,
+      fileUrl: input.fileUrl,
+      fileSize: input.fileSize,
+      tags: input.tags,
       visibility,
       uploadedBy: admin.id,
     })
@@ -101,8 +95,8 @@ export async function createAsset(formData: FormData): Promise<ActionResult> {
     revalidatePath('/')
     return { ok: true }
   } catch (err) {
-    console.error('[v0] createAsset error:', err)
-    return { ok: false, error: 'No se pudo cargar el asset. Intentá de nuevo.' }
+    console.error('[v0] saveAssetRecord error:', err)
+    return { ok: false, error: 'No se pudo registrar el asset. Intentá de nuevo.' }
   }
 }
 
