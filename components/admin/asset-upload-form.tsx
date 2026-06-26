@@ -2,8 +2,9 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { upload } from '@vercel/blob/client'
 import { UploadCloud, Loader2, CheckCircle2, AlertCircle, FileUp, X } from 'lucide-react'
-import { createAsset } from '@/app/actions/assets'
+import { saveAssetRecord } from '@/app/actions/assets'
 import { CATEGORIES, FILE_TYPES } from '@/lib/categories'
 import { ROLE_LABELS, ROLES, type Role } from '@/lib/db/schema'
 import { cn } from '@/lib/utils'
@@ -21,6 +22,7 @@ export function AssetUploadForm() {
   const [visibility, setVisibility] = useState<Role[]>(['distribuidor', 'comercial'])
   const [fileName, setFileName] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
@@ -36,24 +38,68 @@ export function AssetUploadForm() {
     setSuccess(false)
 
     const formData = new FormData(e.currentTarget)
-    visibility.forEach((r) => formData.append('visibility', r))
-    formData.delete('visibility-checkbox')
+    const title = String(formData.get('title') ?? '').trim()
+    const description = String(formData.get('description') ?? '').trim()
+    const category = String(formData.get('category') ?? '').trim()
+    const fileType = String(formData.get('fileType') ?? '').trim()
+    const tagsRaw = String(formData.get('tags') ?? '').trim()
+    const file = formData.get('file') as File | null
+
+    if (!title) return setError('El título es obligatorio.')
+    if (!category) return setError('Seleccioná una categoría.')
+    if (!fileType) return setError('Seleccioná el tipo de archivo.')
+    if (visibility.length === 0)
+      return setError('Seleccioná al menos un rol con visibilidad.')
+    if (!file || file.size === 0) return setError('Adjuntá un archivo para cargar.')
+
+    const tags = tagsRaw
+      ? tagsRaw.split(',').map((t) => t.trim()).filter(Boolean)
+      : []
 
     setLoading(true)
-    const result = await createAsset(formData)
-    setLoading(false)
+    setProgress(0)
 
-    if (!result.ok) {
-      setError(result.error)
-      return
+    try {
+      // Carga directa del navegador a Vercel Blob (soporta archivos grandes).
+      const blob = await upload(`assets/${category}/${file.name}`, file, {
+        access: 'public',
+        handleUploadUrl: '/api/assets/upload',
+        multipart: true,
+        onUploadProgress: (e) => setProgress(Math.round(e.percentage)),
+      })
+
+      // Registro del asset en la base de datos.
+      const result = await saveAssetRecord({
+        title,
+        description,
+        category,
+        fileType,
+        tags,
+        visibility,
+        fileName: file.name,
+        filePathname: blob.pathname,
+        fileUrl: blob.url,
+        fileSize: file.size,
+      })
+
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+
+      setSuccess(true)
+      setFileName(null)
+      formRef.current?.reset()
+      setVisibility(['distribuidor', 'comercial'])
+      router.refresh()
+      setTimeout(() => setSuccess(false), 4000)
+    } catch (err) {
+      console.error('[v0] upload error:', err)
+      setError('No se pudo subir el archivo. Verificá el tamaño y volvé a intentar.')
+    } finally {
+      setLoading(false)
+      setProgress(0)
     }
-
-    setSuccess(true)
-    setFileName(null)
-    formRef.current?.reset()
-    setVisibility(['distribuidor', 'comercial'])
-    router.refresh()
-    setTimeout(() => setSuccess(false), 4000)
   }
 
   return (
@@ -231,6 +277,22 @@ export function AssetUploadForm() {
         </label>
       </div>
 
+      {loading && (
+        <div
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Progreso de carga"
+          className="h-2 w-full overflow-hidden rounded-full bg-muted"
+        >
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-200"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
+
       <button
         type="submit"
         disabled={loading}
@@ -239,7 +301,7 @@ export function AssetUploadForm() {
         {loading ? (
           <>
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            Cargando material…
+            {progress > 0 ? `Subiendo… ${progress}%` : 'Subiendo…'}
           </>
         ) : (
           <>
