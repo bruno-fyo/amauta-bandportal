@@ -102,7 +102,7 @@ export async function createAsset(formData: FormData): Promise<ActionResult> {
     return { ok: true }
   } catch (err) {
     console.error('[v0] createAsset error:', err)
-    return { ok: false, error: 'No se pudo cargar el asset. Intentá de nuevo.' }
+    return { ok: false, error: 'No se pudo cargar el material. Intentá de nuevo.' }
   }
 }
 
@@ -111,7 +111,7 @@ export async function deleteAsset(id: number): Promise<ActionResult> {
   try {
     await requireAdmin()
     const [row] = await db.select().from(assets).where(eq(assets.id, id))
-    if (!row) return { ok: false, error: 'El asset ya no existe.' }
+    if (!row) return { ok: false, error: 'El material ya no existe.' }
 
     if (row.fileUrl) {
       try {
@@ -127,6 +127,6 @@ export async function deleteAsset(id: number): Promise<ActionResult> {
     return { ok: true }
   } catch (err) {
     console.error('[v0] deleteAsset error:', err)
-    return { ok: false, error: 'No se pudo eliminar el asset.' }
+    return { ok: false, error: 'No se pudo eliminar el material.' }
   }
 }

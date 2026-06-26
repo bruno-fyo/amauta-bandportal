@@ -8,13 +8,17 @@ import { CATEGORIES, FILE_TYPES } from '@/lib/categories'
 import { ROLE_LABELS, ROLES, type Role } from '@/lib/db/schema'
 import { cn } from '@/lib/utils'
 
+// El administrador siempre tiene acceso a todo el material, por eso no se
+// ofrece como opción de visibilidad: solo se eligen los demás roles.
+const SELECTABLE_VISIBILITY: Role[] = ROLES.filter((r) => r !== 'admin')
+
 const inputClass =
   'h-11 w-full rounded-xl border border-border bg-card px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/15'
 
 export function AssetUploadForm() {
   const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
-  const [visibility, setVisibility] = useState<Role[]>(['admin', 'distribuidor', 'comercial'])
+  const [visibility, setVisibility] = useState<Role[]>(['distribuidor', 'comercial'])
   const [fileName, setFileName] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +51,7 @@ export function AssetUploadForm() {
     setSuccess(true)
     setFileName(null)
     formRef.current?.reset()
-    setVisibility(['admin', 'distribuidor', 'comercial'])
+    setVisibility(['distribuidor', 'comercial'])
     router.refresh()
     setTimeout(() => setSuccess(false), 4000)
   }
@@ -69,7 +73,7 @@ export function AssetUploadForm() {
           className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-primary"
         >
           <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <span>Asset cargado correctamente.</span>
+          <span>Material cargado correctamente.</span>
         </div>
       )}
 
@@ -137,11 +141,14 @@ export function AssetUploadForm() {
 
       {/* Visibilidad por rol */}
       <div>
-        <span className="mb-2 block text-sm font-semibold text-foreground">
+        <span className="mb-1 block text-sm font-semibold text-foreground">
           Visibilidad por rol <span className="text-destructive">*</span>
         </span>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {ROLES.map((role) => {
+        <p className="mb-2 text-xs text-muted-foreground">
+          El administrador siempre tiene acceso a todo el material.
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {SELECTABLE_VISIBILITY.map((role) => {
             const active = visibility.includes(role)
             return (
               <button
@@ -232,12 +239,12 @@ export function AssetUploadForm() {
         {loading ? (
           <>
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            Cargando asset…
+            Cargando material…
           </>
         ) : (
           <>
             <UploadCloud className="size-4" aria-hidden="true" />
-            Cargar asset
+            Cargar material
           </>
         )}
       </button>
