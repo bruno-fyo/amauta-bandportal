@@ -14,7 +14,7 @@ export default async function AdminPage() {
   const [assets, users] = await Promise.all([getAllAssets(), getUsers()])
 
   const stats = [
-    { label: 'Assets cargados', value: assets.length, icon: FileStack },
+    { label: 'Materiales cargados', value: assets.length, icon: FileStack },
     { label: 'Usuarios registrados', value: users.length, icon: Users },
     {
       label: 'Administradores',
@@ -54,7 +54,7 @@ export default async function AdminPage() {
       {/* Carga de assets */}
       <section className="mb-12">
         <SectionHeading
-          title="Cargar nuevo asset"
+          title="Cargar nuevo material"
           description="Subí un archivo, asigná su categoría y definí qué roles pueden verlo."
         />
         <div className="rounded-2xl border border-border bg-card p-6 md:p-8">
@@ -65,8 +65,8 @@ export default async function AdminPage() {
       {/* Listado de assets */}
       <section className="mb-12">
         <SectionHeading
-          title="Assets del portal"
-          description="Todos los recursos cargados, con su visibilidad y acciones."
+          title="Materiales del portal"
+          description="Todos los materiales cargados, con su visibilidad y acciones."
         />
         <AssetTable assets={assets} />
       </section>

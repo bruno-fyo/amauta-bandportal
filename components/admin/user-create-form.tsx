@@ -7,7 +7,7 @@ import { createUser } from '@/app/actions/users'
 import { ROLES, ROLE_LABELS, type Role } from '@/lib/db/schema'
 
 const ROLE_HINTS: Record<Role, string> = {
-  admin: 'Acceso total: carga de assets y gestión de usuarios.',
+  admin: 'Acceso total: carga de materiales y gestión de usuarios.',
   distribuidor: 'Accede al material comercial y de distribución.',
   comercial: 'Accede al material de venta y comunicación.',
 }

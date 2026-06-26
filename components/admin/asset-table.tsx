@@ -40,10 +40,10 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
           <Inbox className="size-6 text-muted-foreground" aria-hidden="true" />
         </span>
         <p className="mt-4 text-sm font-semibold text-foreground">
-          Todavía no hay assets cargados
+          Todavía no hay materiales cargados
         </p>
         <p className="mt-1 max-w-xs text-pretty text-sm text-muted-foreground">
-          Usá el formulario para cargar el primer recurso del portal.
+          Usá el formulario para cargar el primer material del portal.
         </p>
       </div>
     )
@@ -60,7 +60,7 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="px-4 py-3 font-semibold">Asset</th>
+              <th className="px-4 py-3 font-semibold">Material</th>
               <th className="px-4 py-3 font-semibold">Categoría</th>
               <th className="px-4 py-3 font-semibold">Tipo</th>
               <th className="px-4 py-3 font-semibold">Visibilidad</th>

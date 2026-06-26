@@ -97,5 +97,5 @@ export const ROLES: Role[] = ['admin', 'distribuidor', 'comercial']
 export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Administrador',
   distribuidor: 'Distribuidor',
-  comercial: 'Comercial',
+  comercial: 'Colaborador',
 }
