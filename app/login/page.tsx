@@ -42,15 +42,6 @@ export default async function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#1d1b16]/90 via-[#1d1b16]/35 to-[#1d1b16]/20" />
 
         <div className="absolute inset-0 flex flex-col justify-between p-14">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-accent">
-              <AmautaIso className="h-5 w-auto text-accent-foreground" />
-            </span>
-            <span className="text-sm font-semibold uppercase tracking-wider text-[#fcf9f6]/80">
-              Portal de Marca
-            </span>
-          </div>
-
           <div className="max-w-lg">
             <p className="font-heading text-4xl font-bold leading-tight text-[#fcf9f6]">
               Evolucionando
