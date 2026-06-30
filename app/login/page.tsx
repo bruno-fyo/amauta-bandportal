@@ -41,7 +41,7 @@ export default async function LoginPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#1d1b16]/90 via-[#1d1b16]/35 to-[#1d1b16]/20" />
 
-        <div className="absolute inset-0 flex flex-col justify-between p-14">
+        <div className="absolute inset-0 flex flex-col justify-end p-14">
           <div className="max-w-lg">
             <p className="font-heading text-4xl font-bold leading-tight text-[#fcf9f6]">
               Evolucionando
