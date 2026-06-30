@@ -58,12 +58,9 @@ export function AssetCard({ asset }: { asset: Asset }) {
           ) : null}
         </div>
 
-        {asset.fileUrl ? (
+        {asset.filePathname ? (
           <a
-            href={asset.fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            download
+            href={`/api/assets/${asset.id}/download?download=1`}
             className="mt-1 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-secondary text-sm font-semibold text-secondary-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
           >
             <Download className="size-4" aria-hidden="true" />

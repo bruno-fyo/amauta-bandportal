@@ -62,7 +62,7 @@ export function AssetUploadForm() {
     try {
       // Carga directa del navegador a Vercel Blob (soporta archivos grandes).
       const blob = await upload(`assets/${category}/${file.name}`, file, {
-        access: 'public',
+        access: 'private',
         handleUploadUrl: '/api/assets/upload',
         multipart: true,
         onUploadProgress: (e) => setProgress(Math.round(e.percentage)),

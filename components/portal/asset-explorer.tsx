@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Image from 'next/image'
 import { Download, FileText, ImageOff } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import type { Asset } from '@/lib/db/schema'
@@ -13,7 +12,7 @@ const IMAGE_TYPES = ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif']
 
 function isImage(asset: Asset) {
   return (
-    !!asset.fileUrl &&
+    !!asset.filePathname &&
     IMAGE_TYPES.includes((asset.fileType || '').toLowerCase())
   )
 }
@@ -21,13 +20,12 @@ function isImage(asset: Asset) {
 function AssetThumb({ asset, className }: { asset: Asset; className?: string }) {
   if (isImage(asset)) {
     return (
-      <Image
-        src={asset.fileUrl as string}
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={`/api/assets/${asset.id}/download`}
         alt={asset.title}
-        fill
-        sizes="(max-width: 768px) 100vw, 360px"
         className={cn(
-          'object-cover transition-transform duration-500 group-hover:scale-105',
+          'absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105',
           className,
         )}
       />
@@ -210,16 +208,14 @@ function DownloadButton({
   asset: Asset
   variant: 'full' | 'overlay'
 }) {
-  const disabled = !asset.fileUrl
+  const disabled = !asset.filePathname
   const baseLabel = disabled ? 'Archivo no disponible' : 'Descargar'
+  const href = disabled ? '#' : `/api/assets/${asset.id}/download?download=1`
 
   if (variant === 'overlay') {
     return (
       <a
-        href={asset.fileUrl ?? '#'}
-        download={asset.fileName ?? undefined}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={href}
         aria-disabled={disabled}
         className={cn(
           'flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-opacity hover:opacity-90',
@@ -234,10 +230,7 @@ function DownloadButton({
 
   return (
     <a
-      href={asset.fileUrl ?? '#'}
-      download={asset.fileName ?? undefined}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={href}
       aria-disabled={disabled}
       className={cn(
         'inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90',
