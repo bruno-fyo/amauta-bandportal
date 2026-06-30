@@ -93,7 +93,7 @@ export function LoginForm() {
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           ) : (
             <>
-              Ingresar al portal
+              Ingresar 
               <ArrowRight className="size-4" aria-hidden="true" />
             </>
           )}
@@ -101,8 +101,8 @@ export function LoginForm() {
       </form>
 
       <p className="mt-8 text-center text-xs text-muted-foreground text-pretty">
-        El acceso al portal es exclusivo para el equipo y la red de Amauta. Si necesitás una cuenta,
-        solicitala al equipo de Marketing.
+        El acceso es exclusivo para el equipo y la red de Amauta. Si necesitás una cuenta, solicitala
+        a marketing@amauta.ag
       </p>
     </div>
   )
