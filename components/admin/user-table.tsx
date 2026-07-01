@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, AlertCircle, Trash2 } from 'lucide-react'
+import { Loader2, AlertCircle, Trash2, Eye, EyeOff } from 'lucide-react'
 import { updateUserRole, deleteUser, type ManagedUser } from '@/app/actions/users'
 import { ROLE_LABELS, ROLES, type Role } from '@/lib/db/schema'
 
@@ -23,6 +23,11 @@ export function UserTable({
   const [savingId, setSavingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
+
+  function togglePassword(userId: string) {
+    setVisiblePasswords((prev) => ({ ...prev, [userId]: !prev[userId] }))
+  }
 
   async function handleChange(userId: string, role: Role) {
     setError(null)
@@ -59,11 +64,12 @@ export function UserTable({
         </div>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] text-left text-sm">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
               <th className="px-4 py-3 font-semibold">Usuario</th>
               <th className="px-4 py-3 font-semibold">Correo</th>
+              <th className="px-4 py-3 font-semibold">Contraseña</th>
               <th className="px-4 py-3 font-semibold">Rol</th>
               <th className="px-4 py-3 text-right font-semibold">Acciones</th>
             </tr>
@@ -87,6 +93,43 @@ export function UserTable({
                   </div>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+                <td className="px-4 py-3">
+                  {u.plainPassword ? (
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="font-mono text-sm text-foreground"
+                        aria-label={
+                          visiblePasswords[u.id]
+                            ? `Contraseña de ${u.name}`
+                            : 'Contraseña oculta'
+                        }
+                      >
+                        {visiblePasswords[u.id] ? u.plainPassword : '••••••••'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => togglePassword(u.id)}
+                        className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        aria-label={
+                          visiblePasswords[u.id]
+                            ? `Ocultar contraseña de ${u.name}`
+                            : `Mostrar contraseña de ${u.name}`
+                        }
+                        aria-pressed={!!visiblePasswords[u.id]}
+                      >
+                        {visiblePasswords[u.id] ? (
+                          <EyeOff className="size-3.5" aria-hidden="true" />
+                        ) : (
+                          <Eye className="size-3.5" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground" title="Disponible al crear o restablecer la contraseña">
+                      —
+                    </span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <select

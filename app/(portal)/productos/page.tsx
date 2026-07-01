@@ -1,31 +1,39 @@
-import { Suspense } from 'react'
 import { PageHeader } from '@/components/portal/section-heading'
-import { AssetExplorer } from '@/components/portal/asset-explorer'
-import { AssetGridSkeleton } from '@/components/portal/asset-skeleton'
-import { getAssetsForUser } from '@/app/actions/assets'
+import { ProductCatalog } from '@/components/portal/product-catalog'
+import { getCatalog } from '@/app/actions/catalog'
 
-export default function ProductosPage() {
+export default async function ProductosPage() {
+  const families = await getCatalog()
+  const totalProducts = families.reduce((n, f) => n + f.products.length, 0)
+
   return (
     <div>
       <PageHeader
         title="Productos"
-        description="Biblioteca de fichas técnicas, fotografías y material de cada solución nutricional de Amauta."
+        description="Explorá el portfolio completo de Amauta por familia. Desplegá cada familia para ver sus productos y descargar la ficha técnica de cada uno."
       />
-      <Suspense fallback={<AssetGridSkeleton />}>
-        <ProductosList />
-      </Suspense>
+      <div className="mb-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
+        <span>
+          <strong className="font-heading text-lg font-bold text-foreground">
+            {families.length}
+          </strong>{' '}
+          familias
+        </span>
+        <span>
+          <strong className="font-heading text-lg font-bold text-foreground">
+            {totalProducts}
+          </strong>{' '}
+          productos
+        </span>
+      </div>
+      {families.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
+          Todavía no hay productos cargados. El administrador puede agregarlos desde el
+          panel.
+        </p>
+      ) : (
+        <ProductCatalog families={families} />
+      )}
     </div>
-  )
-}
-
-async function ProductosList() {
-  const assets = await getAssetsForUser('productos')
-  return (
-    <AssetExplorer
-      assets={assets}
-      layout="grid"
-      emptyTitle="Todavía no hay productos cargados"
-      emptyDescription="El equipo de Marketing publicará aquí las fichas técnicas y el material de cada producto."
-    />
   )
 }

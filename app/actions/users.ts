@@ -14,6 +14,7 @@ export type ManagedUser = {
   name: string
   email: string
   role: Role
+  plainPassword: string | null
   createdAt: Date
 }
 
@@ -26,6 +27,7 @@ export async function getUsers(): Promise<ManagedUser[]> {
       name: user.name,
       email: user.email,
       role: user.role,
+      plainPassword: user.plainPassword,
       createdAt: user.createdAt,
     })
     .from(user)
@@ -63,10 +65,11 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
     if (!created?.user?.id)
       return { ok: false, error: 'No se pudo crear la cuenta.' }
 
-    // Asignamos el rol elegido por el admin.
+    // Asignamos el rol elegido y guardamos una copia visible de la contraseña
+    // para que el admin pueda consultarla desde el listado de usuarios.
     await db
       .update(user)
-      .set({ role, updatedAt: new Date() })
+      .set({ role, plainPassword: password, updatedAt: new Date() })
       .where(eq(user.id, created.user.id))
 
     revalidatePath('/admin')

@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import type { Role } from '@/lib/db/schema'
+import { canAccessCategory, type CategoryKey } from '@/lib/categories'
 
 export type SessionUser = {
   id: string
@@ -37,5 +38,15 @@ export async function requireUser(): Promise<SessionUser> {
 export async function requireAdmin(): Promise<SessionUser> {
   const user = await requireUser()
   if (user.role !== 'admin') redirect('/')
+  return user
+}
+
+// Exige acceso a una categoría del portal; si el rol no la puede ver, redirige
+// al dashboard. Protege el acceso directo por URL a categorías restringidas.
+export async function requireCategoryAccess(
+  key: CategoryKey,
+): Promise<SessionUser> {
+  const user = await requireUser()
+  if (!canAccessCategory(user.role, key)) redirect('/')
   return user
 }

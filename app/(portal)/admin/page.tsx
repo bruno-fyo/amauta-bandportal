@@ -1,20 +1,43 @@
-import { FileStack, Users, ShieldCheck } from 'lucide-react'
+import { FileStack, Users, ShieldCheck, FileText } from 'lucide-react'
 import { PageHeader, SectionHeading } from '@/components/portal/section-heading'
 import { AssetUploadForm } from '@/components/admin/asset-upload-form'
 import { AssetTable } from '@/components/admin/asset-table'
 import { UserTable } from '@/components/admin/user-table'
 import { UserCreateForm } from '@/components/admin/user-create-form'
+import { CatalogManager } from '@/components/admin/catalog-manager'
 import { getAllAssets } from '@/app/actions/assets'
+import { getFichasMap } from '@/app/actions/fichas'
+import { getCatalog } from '@/app/actions/catalog'
 import { getUsers } from '@/app/actions/users'
 import { requireAdmin } from '@/lib/session'
 import { ROLE_LABELS } from '@/lib/db/schema'
 
 export default async function AdminPage() {
   const admin = await requireAdmin()
-  const [assets, users] = await Promise.all([getAllAssets(), getUsers()])
+  const [assets, users, fichas, catalog] = await Promise.all([
+    getAllAssets(),
+    getUsers(),
+    getFichasMap(),
+    getCatalog(),
+  ])
+
+  const totalProducts = catalog.reduce((n, f) => n + f.products.length, 0)
+
+  // Serializamos las fechas para pasar los datos al componente cliente.
+  const fichaInfos = Object.fromEntries(
+    Object.entries(fichas).map(([slug, f]) => [
+      slug,
+      { fileName: f.fileName, fileSize: f.fileSize, updatedAt: f.updatedAt },
+    ]),
+  )
 
   const stats = [
     { label: 'Materiales cargados', value: assets.length, icon: FileStack },
+    {
+      label: 'Fichas técnicas',
+      value: `${Object.keys(fichas).length}/${totalProducts}`,
+      icon: FileText,
+    },
     { label: 'Usuarios registrados', value: users.length, icon: Users },
     {
       label: 'Administradores',
@@ -31,7 +54,7 @@ export default async function AdminPage() {
       />
 
       {/* Stats */}
-      <div className="mb-12 grid gap-4 sm:grid-cols-3">
+      <div className="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => {
           const Icon = s.icon
           return (
@@ -69,6 +92,15 @@ export default async function AdminPage() {
           description="Todos los materiales cargados, con su visibilidad y acciones."
         />
         <AssetTable assets={assets} />
+      </section>
+
+      {/* Catálogo de productos (familias, productos, fotos y fichas) */}
+      <section className="mb-12">
+        <SectionHeading
+          title="Catálogo de productos"
+          description="Creá, editá y eliminá familias y productos. Cargá la foto mock-up y la ficha técnica de cada producto. Los cambios se reflejan al instante en la sección Productos."
+        />
+        <CatalogManager families={catalog} fichas={fichaInfos} />
       </section>
 
       {/* Alta de usuarios */}
