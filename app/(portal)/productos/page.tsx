@@ -1,31 +1,29 @@
-import { Suspense } from 'react'
 import { PageHeader } from '@/components/portal/section-heading'
-import { AssetExplorer } from '@/components/portal/asset-explorer'
-import { AssetGridSkeleton } from '@/components/portal/asset-skeleton'
-import { getAssetsForUser } from '@/app/actions/assets'
+import { ProductCatalog } from '@/components/portal/product-catalog'
+import { PRODUCT_FAMILIES, TOTAL_PRODUCTS } from '@/lib/products'
 
 export default function ProductosPage() {
   return (
     <div>
       <PageHeader
-        title="Productos"
-        description="Biblioteca de fichas técnicas, fotografías y material de cada solución nutricional de Amauta."
+        title="Catálogo de Productos"
+        description="Explorá el portfolio completo de Amauta por familia. Desplegá cada familia para ver sus productos y descargar la ficha técnica de cada uno."
       />
-      <Suspense fallback={<AssetGridSkeleton />}>
-        <ProductosList />
-      </Suspense>
+      <div className="mb-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
+        <span>
+          <strong className="font-heading text-lg font-bold text-foreground">
+            {PRODUCT_FAMILIES.length}
+          </strong>{' '}
+          familias
+        </span>
+        <span>
+          <strong className="font-heading text-lg font-bold text-foreground">
+            {TOTAL_PRODUCTS}
+          </strong>{' '}
+          productos
+        </span>
+      </div>
+      <ProductCatalog />
     </div>
-  )
-}
-
-async function ProductosList() {
-  const assets = await getAssetsForUser('productos')
-  return (
-    <AssetExplorer
-      assets={assets}
-      layout="grid"
-      emptyTitle="Todavía no hay productos cargados"
-      emptyDescription="El equipo de Marketing publicará aquí las fichas técnicas y el material de cada producto."
-    />
   )
 }
