@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Search, Bell, Menu, X, RefreshCw, LogOut } from 'lucide-react'
 import { AmautaIso } from '@/components/brand/logo'
 import { authClient } from '@/lib/auth-client'
-import { navItems } from '@/lib/data'
+import { navItemsForRole } from '@/lib/data'
 import { ROLE_LABELS } from '@/lib/db/schema'
 import type { SessionUser } from '@/lib/session'
 import { cn } from '@/lib/utils'
@@ -146,7 +146,7 @@ export function Header({ user }: { user: SessionUser }) {
       {menuOpen ? (
         <nav className="border-t border-border bg-card px-4 py-3 lg:hidden">
           <ul className="grid grid-cols-2 gap-1.5">
-            {navItems.map((item) => {
+            {navItemsForRole(user.role).map((item) => {
               const active =
                 item.href === '/'
                   ? pathname === '/'

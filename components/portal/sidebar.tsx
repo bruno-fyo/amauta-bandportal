@@ -5,13 +5,14 @@ import { usePathname, useRouter } from 'next/navigation'
 import { LogOut, LifeBuoy, ShieldCheck } from 'lucide-react'
 import { AmautaWordmark } from '@/components/brand/logo'
 import { authClient } from '@/lib/auth-client'
-import { navItems } from '@/lib/data'
+import { navItemsForRole } from '@/lib/data'
 import type { Role } from '@/lib/db/schema'
 import { cn } from '@/lib/utils'
 
 export function Sidebar({ role }: { role: Role }) {
   const pathname = usePathname()
   const router = useRouter()
+  const items = navItemsForRole(role)
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -32,7 +33,7 @@ export function Sidebar({ role }: { role: Role }) {
           Recursos
         </p>
         <ul className="flex flex-col gap-1">
-          {navItems.map((item) => {
+          {items.map((item) => {
             const active =
               item.href === '/'
                 ? pathname === '/'

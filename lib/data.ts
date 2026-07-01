@@ -3,29 +3,41 @@ import {
   Fingerprint,
   Package,
   Briefcase,
+  PackageOpen,
   Share2,
   Images,
   Video,
   Megaphone,
   type LucideIcon,
 } from 'lucide-react'
+import type { Role } from '@/lib/db/schema'
 
 export type NavItem = {
   label: string
   href: string
   icon: LucideIcon
+  // Roles que ven el ítem. undefined = todos. El admin siempre lo ve.
+  roles?: Role[]
 }
 
 export const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { label: 'Identidad de Marca', href: '/identidad', icon: Fingerprint },
   { label: 'Productos', href: '/productos', icon: Package },
-  { label: 'Recursos Comerciales', href: '/recursos', icon: Briefcase },
+  { label: 'Recursos Comerciales', href: '/recursos', icon: Briefcase, roles: ['comercial'] },
+  { label: 'Kit del Distribuidor', href: '/kit-distribuidor', icon: PackageOpen, roles: ['distribuidor'] },
   { label: 'Redes Sociales', href: '/redes', icon: Share2 },
   { label: 'Banco de Imágenes', href: '/imagenes', icon: Images },
   { label: 'Videos', href: '/videos', icon: Video },
   { label: 'Campañas', href: '/campanas', icon: Megaphone },
 ]
+
+// Ítems de navegación visibles para un rol. El admin ve todo.
+export function navItemsForRole(role: Role): NavItem[] {
+  return navItems.filter(
+    (item) => !item.roles || role === 'admin' || item.roles.includes(role),
+  )
+}
 
 export type ResourceType =
   | 'PDF'

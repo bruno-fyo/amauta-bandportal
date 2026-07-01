@@ -7,7 +7,9 @@ import { CategoryCard } from '@/components/portal/category-card'
 import { SectionHeading } from '@/components/portal/section-heading'
 import { AssetGridSkeleton } from '@/components/portal/asset-skeleton'
 import { getAssetsForUser, getAssetCounts } from '@/app/actions/assets'
-import { CATEGORIES } from '@/lib/categories'
+import { categoriesForRole } from '@/lib/categories'
+import { requireUser } from '@/lib/session'
+import type { Role } from '@/lib/db/schema'
 import { Inbox } from 'lucide-react'
 
 async function RecentAssets() {
@@ -43,17 +45,18 @@ const categoryImages: Record<string, string> = {
   identidad: '/images/soil-hands.png',
   productos: '/images/product-granulado.png',
   recursos: '/images/people-field.png',
+  'kit-distribuidor': '/images/field-aerial.png',
   redes: '/images/crop-maiz.png',
   imagenes: '/images/crop-girasol.png',
   videos: '/images/field-aerial.png',
   campanas: '/images/campaign-trigo.png',
 }
 
-async function CategoryList() {
+async function CategoryList({ role }: { role: Role }) {
   const counts = await getAssetCounts()
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {CATEGORIES.map((c) => (
+      {categoriesForRole(role).map((c) => (
         <CategoryCard
           key={c.key}
           category={{
@@ -68,13 +71,16 @@ async function CategoryList() {
   )
 }
 
-const stats = [
-  { label: 'Material oficial', value: 'Centralizado', icon: FileStack },
-  { label: 'Categorías', value: '7', icon: Compass },
-  { label: 'Siempre actualizado', value: 'Al día', icon: Sparkles },
-]
+export default async function DashboardPage() {
+  const user = await requireUser()
+  const visibleCategories = categoriesForRole(user.role)
 
-export default function DashboardPage() {
+  const stats = [
+    { label: 'Material oficial', value: 'Centralizado', icon: FileStack },
+    { label: 'Categorías', value: String(visibleCategories.length), icon: Compass },
+    { label: 'Siempre actualizado', value: 'Al día', icon: Sparkles },
+  ]
+
   return (
     <div className="flex flex-col gap-14">
       {/* Hero */}
@@ -140,7 +146,7 @@ export default function DashboardPage() {
           description="Navegá el material organizado por tipo de contenido."
         />
         <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-muted" />}>
-          <CategoryList />
+          <CategoryList role={user.role} />
         </Suspense>
       </section>
     </div>

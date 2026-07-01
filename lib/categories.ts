@@ -6,6 +6,7 @@ export type CategoryKey =
   | 'identidad'
   | 'productos'
   | 'recursos'
+  | 'kit-distribuidor'
   | 'redes'
   | 'imagenes'
   | 'videos'
@@ -15,17 +16,36 @@ export type CategoryMeta = {
   key: CategoryKey
   label: string
   href: string
+  // Roles que pueden ver la categoría. undefined = visible para todos.
+  // El administrador siempre tiene acceso a todas las categorías.
+  roles?: Role[]
 }
 
 export const CATEGORIES: CategoryMeta[] = [
   { key: 'identidad', label: 'Identidad de Marca', href: '/identidad' },
   { key: 'productos', label: 'Productos', href: '/productos' },
-  { key: 'recursos', label: 'Recursos Comerciales', href: '/recursos' },
+  // Recursos Comerciales: solo colaboradores (rol "comercial").
+  { key: 'recursos', label: 'Recursos Comerciales', href: '/recursos', roles: ['comercial'] },
+  // Kit del Distribuidor: solo distribuidores.
+  { key: 'kit-distribuidor', label: 'Kit del Distribuidor', href: '/kit-distribuidor', roles: ['distribuidor'] },
   { key: 'redes', label: 'Redes Sociales', href: '/redes' },
   { key: 'imagenes', label: 'Banco de Imágenes', href: '/imagenes' },
   { key: 'videos', label: 'Videos', href: '/videos' },
   { key: 'campanas', label: 'Campañas', href: '/campanas' },
 ]
+
+// ¿El rol puede acceder a la categoría? El admin siempre puede.
+export function canAccessCategory(role: Role, key: CategoryKey): boolean {
+  if (role === 'admin') return true
+  const cat = CATEGORIES.find((c) => c.key === key)
+  if (!cat?.roles) return true
+  return cat.roles.includes(role)
+}
+
+// Categorías visibles para un rol dado.
+export function categoriesForRole(role: Role): CategoryMeta[] {
+  return CATEGORIES.filter((c) => canAccessCategory(role, c.key))
+}
 
 export const CATEGORY_LABELS: Record<CategoryKey, string> = CATEGORIES.reduce(
   (acc, c) => {
