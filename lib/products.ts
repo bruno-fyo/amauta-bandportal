@@ -37,7 +37,6 @@ export const PRODUCT_FAMILIES: ProductFamily[] = [
     description:
       'Microgranulados de arranque que aportan fósforo y micronutrientes de alta eficiencia en la línea de siembra.',
     products: [
-      { slug: 'micro', name: 'Micro+', color: '#6CC24A' },
       { slug: 'micro-10-40', name: 'Micro+ 10-40', color: '#FA4616' },
       { slug: 'micro-10-27', name: 'Micro+ 10-27', color: '#F2A900' },
       { slug: 'micro-plus', name: 'Micro+ Plus', color: '#003057' },
