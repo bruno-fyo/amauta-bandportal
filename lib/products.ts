@@ -2,16 +2,15 @@
 // Los colores provienen del Manual de Identidad de Productos.
 //
 // Imágenes: colocar el PNG de cada producto en `public/products/<slug>.png`.
-// Fichas técnicas: colocar el PDF en `public/products/fichas/<slug>.pdf`
-// y marcar `ficha: true` para habilitar el botón de descarga.
+// Fichas técnicas: las gestiona el administrador desde /admin (se guardan en la
+// tabla `product_fichas` y en Vercel Blob). El botón de descarga aparece
+// automáticamente cuando existe una ficha para el `slug` del producto.
 
 export type Product = {
   slug: string
   name: string
   /** Color de marca del producto (chip identificador). */
   color: string
-  /** ¿Ya existe la ficha técnica en public/products/fichas/<slug>.pdf? */
-  ficha?: boolean
   /** Marcar productos nuevos del rebranding. */
   isNew?: boolean
 }

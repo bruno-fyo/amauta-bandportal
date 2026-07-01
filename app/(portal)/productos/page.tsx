@@ -1,8 +1,12 @@
 import { PageHeader } from '@/components/portal/section-heading'
 import { ProductCatalog } from '@/components/portal/product-catalog'
 import { PRODUCT_FAMILIES, TOTAL_PRODUCTS } from '@/lib/products'
+import { getFichasMap } from '@/app/actions/fichas'
 
-export default function ProductosPage() {
+export default async function ProductosPage() {
+  const fichas = await getFichasMap()
+  const fichaSlugs = Object.keys(fichas)
+
   return (
     <div>
       <PageHeader
@@ -23,7 +27,7 @@ export default function ProductosPage() {
           productos
         </span>
       </div>
-      <ProductCatalog />
+      <ProductCatalog fichaSlugs={fichaSlugs} />
     </div>
   )
 }

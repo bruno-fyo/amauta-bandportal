@@ -1,20 +1,40 @@
-import { FileStack, Users, ShieldCheck } from 'lucide-react'
+import { FileStack, Users, ShieldCheck, FileText } from 'lucide-react'
 import { PageHeader, SectionHeading } from '@/components/portal/section-heading'
 import { AssetUploadForm } from '@/components/admin/asset-upload-form'
 import { AssetTable } from '@/components/admin/asset-table'
 import { UserTable } from '@/components/admin/user-table'
 import { UserCreateForm } from '@/components/admin/user-create-form'
+import { FichaManager } from '@/components/admin/ficha-manager'
 import { getAllAssets } from '@/app/actions/assets'
+import { getFichasMap } from '@/app/actions/fichas'
 import { getUsers } from '@/app/actions/users'
 import { requireAdmin } from '@/lib/session'
 import { ROLE_LABELS } from '@/lib/db/schema'
+import { TOTAL_PRODUCTS } from '@/lib/products'
 
 export default async function AdminPage() {
   const admin = await requireAdmin()
-  const [assets, users] = await Promise.all([getAllAssets(), getUsers()])
+  const [assets, users, fichas] = await Promise.all([
+    getAllAssets(),
+    getUsers(),
+    getFichasMap(),
+  ])
+
+  // Serializamos las fechas para pasar los datos al componente cliente.
+  const fichaInfos = Object.fromEntries(
+    Object.entries(fichas).map(([slug, f]) => [
+      slug,
+      { fileName: f.fileName, fileSize: f.fileSize, updatedAt: f.updatedAt },
+    ]),
+  )
 
   const stats = [
     { label: 'Materiales cargados', value: assets.length, icon: FileStack },
+    {
+      label: 'Fichas técnicas',
+      value: `${Object.keys(fichas).length}/${TOTAL_PRODUCTS}`,
+      icon: FileText,
+    },
     { label: 'Usuarios registrados', value: users.length, icon: Users },
     {
       label: 'Administradores',
@@ -31,7 +51,7 @@ export default async function AdminPage() {
       />
 
       {/* Stats */}
-      <div className="mb-12 grid gap-4 sm:grid-cols-3">
+      <div className="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => {
           const Icon = s.icon
           return (
@@ -69,6 +89,15 @@ export default async function AdminPage() {
           description="Todos los materiales cargados, con su visibilidad y acciones."
         />
         <AssetTable assets={assets} />
+      </section>
+
+      {/* Fichas técnicas de productos */}
+      <section className="mb-12">
+        <SectionHeading
+          title="Fichas técnicas de productos"
+          description="Subí, reemplazá o eliminá el PDF de la ficha técnica de cada producto. Los cambios se reflejan al instante en la sección Productos."
+        />
+        <FichaManager fichas={fichaInfos} />
       </section>
 
       {/* Alta de usuarios */}

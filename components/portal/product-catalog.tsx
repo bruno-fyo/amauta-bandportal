@@ -9,11 +9,14 @@ import {
   type ProductFamily,
 } from '@/lib/products'
 
-export function ProductCatalog() {
+// Conjunto de slugs que tienen ficha técnica cargada en la base de datos.
+export function ProductCatalog({ fichaSlugs = [] }: { fichaSlugs?: string[] }) {
   // La primera familia arranca abierta; el resto se despliega al hacer clic.
   const [open, setOpen] = useState<Record<string, boolean>>({
     [PRODUCT_FAMILIES[0]?.slug ?? '']: true,
   })
+
+  const fichaSet = new Set(fichaSlugs)
 
   function toggle(slug: string) {
     setOpen((prev) => ({ ...prev, [slug]: !prev[slug] }))
@@ -27,6 +30,7 @@ export function ProductCatalog() {
           family={family}
           isOpen={!!open[family.slug]}
           onToggle={() => toggle(family.slug)}
+          fichaSet={fichaSet}
         />
       ))}
     </div>
@@ -37,10 +41,12 @@ function FamilyPanel({
   family,
   isOpen,
   onToggle,
+  fichaSet,
 }: {
   family: ProductFamily
   isOpen: boolean
   onToggle: () => void
+  fichaSet: Set<string>
 }) {
   const panelId = `family-panel-${family.slug}`
 
@@ -103,6 +109,7 @@ function FamilyPanel({
                 key={product.slug}
                 product={product}
                 family={family}
+                hasFicha={fichaSet.has(product.slug)}
               />
             ))}
           </div>
@@ -115,9 +122,11 @@ function FamilyPanel({
 function ProductCard({
   product,
   family,
+  hasFicha,
 }: {
   product: Product
   family: ProductFamily
+  hasFicha: boolean
 }) {
   const [imgError, setImgError] = useState(false)
   const showImage = !imgError
@@ -177,18 +186,17 @@ function ProductCard({
           </h3>
         </div>
 
-        <FichaButton product={product} />
+        <FichaButton product={product} hasFicha={hasFicha} />
       </div>
     </article>
   )
 }
 
-function FichaButton({ product }: { product: Product }) {
-  if (product.ficha) {
+function FichaButton({ product, hasFicha }: { product: Product; hasFicha: boolean }) {
+  if (hasFicha) {
     return (
       <a
-        href={`/products/fichas/${product.slug}.pdf`}
-        download
+        href={`/api/fichas/${product.slug}?download=1`}
         className="mt-auto inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
       >
         <Download className="size-3.5" aria-hidden="true" />

@@ -92,6 +92,32 @@ export const assets = pgTable('assets', {
 })
 
 export type Asset = typeof assets.$inferSelect
+
+// ---------------------------------------------------------------------------
+// Fichas técnicas de productos. Una ficha (PDF) por producto, identificada por
+// el `slug` del producto en lib/products.ts. Es autogestionable por el admin:
+// se puede subir, reemplazar o eliminar sin tocar el código.
+// ---------------------------------------------------------------------------
+export const productFichas = pgTable('product_fichas', {
+  // Slug del producto (coincide con Product.slug en lib/products.ts).
+  slug: text('slug').primaryKey(),
+  // Datos del PDF en Vercel Blob (privado).
+  fileName: text('fileName'),
+  filePathname: text('filePathname').notNull(),
+  fileUrl: text('fileUrl').notNull(),
+  fileSize: integer('fileSize'),
+  // Usuario admin que subió/actualizó la ficha.
+  uploadedBy: text('uploadedBy').notNull(),
+  createdAt: timestamp('createdAt')
+    .$defaultFn(() => new Date())
+    .notNull(),
+  updatedAt: timestamp('updatedAt')
+    .$defaultFn(() => new Date())
+    .notNull(),
+})
+
+export type ProductFicha = typeof productFichas.$inferSelect
+
 export type Role = 'admin' | 'distribuidor' | 'comercial'
 export const ROLES: Role[] = ['admin', 'distribuidor', 'comercial']
 export const ROLE_LABELS: Record<Role, string> = {
