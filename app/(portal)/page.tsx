@@ -90,15 +90,6 @@ export default function DashboardPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#1d1b16]/92 via-[#1d1b16]/70 to-[#1d1b16]/30" />
 
         <div className="relative flex flex-col gap-8 p-8 md:p-14">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-accent">
-              <AmautaIso className="h-5 w-auto text-accent-foreground" />
-            </span>
-            <span className="text-sm font-semibold uppercase tracking-wider text-[#fcf9f6]/80">
-              Portal de Marca
-            </span>
-          </div>
-
           <div className="max-w-2xl">
             <h1 className="text-balance font-heading text-4xl font-bold leading-[1.05] text-[#fcf9f6] md:text-5xl lg:text-6xl">
               Centro de Recursos Amauta
