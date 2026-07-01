@@ -6,7 +6,7 @@ export default function ProductosPage() {
   return (
     <div>
       <PageHeader
-        title="Catálogo de Productos"
+        title="Productos"
         description="Explorá el portfolio completo de Amauta por familia. Desplegá cada familia para ver sus productos y descargar la ficha técnica de cada uno."
       />
       <div className="mb-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
