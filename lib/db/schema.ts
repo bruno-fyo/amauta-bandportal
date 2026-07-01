@@ -14,6 +14,10 @@ export const user = pgTable('user', {
   image: text('image'),
   // Rol de la aplicación: 'admin' | 'distribuidor' | 'comercial'
   role: text('role').notNull().default('comercial'),
+  // Copia visible de la contraseña (solo para que el admin pueda consultarla).
+  // Se completa al crear/actualizar la contraseña desde el panel. Los usuarios
+  // creados antes de esta función no la tienen (se muestra "—").
+  plainPassword: text('plainPassword'),
   createdAt: timestamp('createdAt')
     .$defaultFn(() => new Date())
     .notNull(),
