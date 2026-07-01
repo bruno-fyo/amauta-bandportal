@@ -106,13 +106,13 @@ export function Sidebar({ role }: { role: Role }) {
           <p className="mt-1 text-xs text-sidebar-foreground/70">
             Contactá al equipo de Marketing de Amauta.
           </p>
-          <button
-            type="button"
+          <a
+            href="mailto:marketing@amauta.ag"
             className="mt-3 inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground transition-opacity hover:opacity-90"
           >
             <LifeBuoy className="size-3.5" aria-hidden="true" />
             Soporte
-          </button>
+          </a>
         </div>
         <button
           type="button"
