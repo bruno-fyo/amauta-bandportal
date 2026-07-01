@@ -4,21 +4,24 @@ import { AssetUploadForm } from '@/components/admin/asset-upload-form'
 import { AssetTable } from '@/components/admin/asset-table'
 import { UserTable } from '@/components/admin/user-table'
 import { UserCreateForm } from '@/components/admin/user-create-form'
-import { FichaManager } from '@/components/admin/ficha-manager'
+import { CatalogManager } from '@/components/admin/catalog-manager'
 import { getAllAssets } from '@/app/actions/assets'
 import { getFichasMap } from '@/app/actions/fichas'
+import { getCatalog } from '@/app/actions/catalog'
 import { getUsers } from '@/app/actions/users'
 import { requireAdmin } from '@/lib/session'
 import { ROLE_LABELS } from '@/lib/db/schema'
-import { TOTAL_PRODUCTS } from '@/lib/products'
 
 export default async function AdminPage() {
   const admin = await requireAdmin()
-  const [assets, users, fichas] = await Promise.all([
+  const [assets, users, fichas, catalog] = await Promise.all([
     getAllAssets(),
     getUsers(),
     getFichasMap(),
+    getCatalog(),
   ])
+
+  const totalProducts = catalog.reduce((n, f) => n + f.products.length, 0)
 
   // Serializamos las fechas para pasar los datos al componente cliente.
   const fichaInfos = Object.fromEntries(
@@ -32,7 +35,7 @@ export default async function AdminPage() {
     { label: 'Materiales cargados', value: assets.length, icon: FileStack },
     {
       label: 'Fichas técnicas',
-      value: `${Object.keys(fichas).length}/${TOTAL_PRODUCTS}`,
+      value: `${Object.keys(fichas).length}/${totalProducts}`,
       icon: FileText,
     },
     { label: 'Usuarios registrados', value: users.length, icon: Users },
@@ -91,13 +94,13 @@ export default async function AdminPage() {
         <AssetTable assets={assets} />
       </section>
 
-      {/* Fichas técnicas de productos */}
+      {/* Catálogo de productos (familias, productos, fotos y fichas) */}
       <section className="mb-12">
         <SectionHeading
-          title="Fichas técnicas de productos"
-          description="Subí, reemplazá o eliminá el PDF de la ficha técnica de cada producto. Los cambios se reflejan al instante en la sección Productos."
+          title="Catálogo de productos"
+          description="Creá, editá y eliminá familias y productos. Cargá la foto mock-up y la ficha técnica de cada producto. Los cambios se reflejan al instante en la sección Productos."
         />
-        <FichaManager fichas={fichaInfos} />
+        <CatalogManager families={catalog} fichas={fichaInfos} />
       </section>
 
       {/* Alta de usuarios */}

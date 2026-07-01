@@ -3,34 +3,26 @@
 import { useState } from 'react'
 import { ChevronDown, Download, FileText, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import {
-  PRODUCT_FAMILIES,
-  type Product,
-  type ProductFamily,
-} from '@/lib/products'
+import type { CatalogFamily, CatalogProduct } from '@/app/actions/catalog'
 
-// Conjunto de slugs que tienen ficha técnica cargada en la base de datos.
-export function ProductCatalog({ fichaSlugs = [] }: { fichaSlugs?: string[] }) {
+export function ProductCatalog({ families }: { families: CatalogFamily[] }) {
   // La primera familia arranca abierta; el resto se despliega al hacer clic.
   const [open, setOpen] = useState<Record<string, boolean>>({
-    [PRODUCT_FAMILIES[0]?.slug ?? '']: true,
+    [families[0]?.id ?? '']: true,
   })
 
-  const fichaSet = new Set(fichaSlugs)
-
-  function toggle(slug: string) {
-    setOpen((prev) => ({ ...prev, [slug]: !prev[slug] }))
+  function toggle(id: string) {
+    setOpen((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
   return (
     <div className="flex flex-col gap-4">
-      {PRODUCT_FAMILIES.map((family) => (
+      {families.map((family) => (
         <FamilyPanel
-          key={family.slug}
+          key={family.id}
           family={family}
-          isOpen={!!open[family.slug]}
-          onToggle={() => toggle(family.slug)}
-          fichaSet={fichaSet}
+          isOpen={!!open[family.id]}
+          onToggle={() => toggle(family.id)}
         />
       ))}
     </div>
@@ -41,14 +33,12 @@ function FamilyPanel({
   family,
   isOpen,
   onToggle,
-  fichaSet,
 }: {
-  family: ProductFamily
+  family: CatalogFamily
   isOpen: boolean
   onToggle: () => void
-  fichaSet: Set<string>
 }) {
-  const panelId = `family-panel-${family.slug}`
+  const panelId = `family-panel-${family.id}`
 
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -71,19 +61,23 @@ function FamilyPanel({
             <h2 className="font-heading text-xl font-bold tracking-tight text-foreground">
               Familia {family.name}
             </h2>
-            <span
-              className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-              style={{
-                backgroundColor: `${family.color}1a`,
-                color: family.color,
-              }}
-            >
-              {family.type}
-            </span>
+            {family.type ? (
+              <span
+                className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                style={{
+                  backgroundColor: `${family.color}1a`,
+                  color: family.color,
+                }}
+              >
+                {family.type}
+              </span>
+            ) : null}
           </div>
-          <p className="mt-1 line-clamp-2 text-pretty text-sm text-muted-foreground">
-            {family.description}
-          </p>
+          {family.description ? (
+            <p className="mt-1 line-clamp-2 text-pretty text-sm text-muted-foreground">
+              {family.description}
+            </p>
+          ) : null}
         </div>
         <span className="hidden shrink-0 text-sm font-semibold text-muted-foreground sm:block">
           {family.products.length}{' '}
@@ -99,20 +93,22 @@ function FamilyPanel({
       </button>
 
       {isOpen ? (
-        <div
-          id={panelId}
-          className="border-t border-border bg-muted/30 p-5"
-        >
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {family.products.map((product) => (
-              <ProductCard
-                key={product.slug}
-                product={product}
-                family={family}
-                hasFicha={fichaSet.has(product.slug)}
-              />
-            ))}
-          </div>
+        <div id={panelId} className="border-t border-border bg-muted/30 p-5">
+          {family.products.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Esta familia todavía no tiene productos.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {family.products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  familyName={family.name}
+                />
+              ))}
+            </div>
+          )}
         </div>
       ) : null}
     </section>
@@ -121,15 +117,13 @@ function FamilyPanel({
 
 function ProductCard({
   product,
-  family,
-  hasFicha,
+  familyName,
 }: {
-  product: Product
-  family: ProductFamily
-  hasFicha: boolean
+  product: CatalogProduct
+  familyName: string
 }) {
   const [imgError, setImgError] = useState(false)
-  const showImage = !imgError
+  const showImage = !!product.imageUrl && !imgError
 
   // La imagen puede fallar antes de que React hidrate y "pierda" el onError.
   // Con un ref detectamos las imágenes que ya fallaron al montar el componente.
@@ -146,7 +140,7 @@ function ProductCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             ref={handleRef}
-            src={`/products/${product.slug}.png`}
+            src={product.imageUrl as string}
             alt={product.name}
             onError={() => setImgError(true)}
             className="absolute inset-0 h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-105"
@@ -162,7 +156,7 @@ function ProductCard({
               {product.name}
             </span>
             <span className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
-              {family.name}
+              {familyName}
             </span>
           </div>
         )}
@@ -186,14 +180,14 @@ function ProductCard({
           </h3>
         </div>
 
-        <FichaButton product={product} hasFicha={hasFicha} />
+        <FichaButton product={product} />
       </div>
     </article>
   )
 }
 
-function FichaButton({ product, hasFicha }: { product: Product; hasFicha: boolean }) {
-  if (hasFicha) {
+function FichaButton({ product }: { product: CatalogProduct }) {
+  if (product.hasFicha) {
     return (
       <a
         href={`/api/fichas/${product.slug}?download=1`}
