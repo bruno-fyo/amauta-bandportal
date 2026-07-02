@@ -65,9 +65,9 @@ export async function saveFichaRecord(input: NewFichaInput): Promise<ActionResul
       .from(productFichas)
       .where(and(eq(productFichas.slug, slug), eq(productFichas.country, input.country)))
 
-    if (existing?.fileUrl && existing.fileUrl !== input.fileUrl) {
+    if (existing?.filePathname && existing.filePathname !== input.filePathname) {
       try {
-        await del(existing.fileUrl)
+        await del(existing.filePathname)
       } catch (e) {
         console.error('[v0] blob del (reemplazo ficha) error:', e)
       }
@@ -121,9 +121,9 @@ export async function deleteFicha(
       .where(and(eq(productFichas.slug, slug), eq(productFichas.country, country)))
     if (!row) return { ok: false, error: 'La ficha ya no existe.' }
 
-    if (row.fileUrl) {
+    if (row.filePathname) {
       try {
-        await del(row.fileUrl)
+        await del(row.filePathname)
       } catch (e) {
         console.error('[v0] blob del error:', e)
       }

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { upload } from '@vercel/blob/client'
+import { uploadAsset } from '@/lib/upload-asset'
 import {
   AlertCircle,
   CheckCircle2,
@@ -436,10 +436,9 @@ function ProductRow({
     }
     setBusy('logo')
     try {
-      const blob = await upload(
+      const blob = await uploadAsset(
         `product-logos/${product.slug}-${Date.now()}-${sanitize(file.name)}`,
         file,
-        { access: 'public', handleUploadUrl: '/api/assets/upload' },
       )
       const res = await saveProductLogo({
         productId: product.id,
@@ -482,10 +481,9 @@ function ProductRow({
     }
     setBusy('image')
     try {
-      const blob = await upload(
+      const blob = await uploadAsset(
         `product-images/${product.slug}-${Date.now()}-${sanitize(file.name)}`,
         file,
-        { access: 'public', handleUploadUrl: '/api/assets/upload' },
       )
       const res = await addProductImage({
         slug: product.slug,
@@ -530,10 +528,10 @@ function ProductRow({
     }
     setBusy(`ficha-${country}`)
     try {
-      const blob = await upload(`fichas/${product.slug}-${country}.pdf`, file, {
-        access: 'private',
-        handleUploadUrl: '/api/assets/upload',
-      })
+      const blob = await uploadAsset(
+        `fichas/${product.slug}-${country}.pdf`,
+        file,
+      )
       const res = await saveFichaRecord({
         slug: product.slug,
         country,
@@ -950,10 +948,9 @@ function ProductForm({
       let imagePathname: string | null | undefined
       const imageChanged = !!imageFile
       if (imageFile) {
-        const blob = await upload(
+        const blob = await uploadAsset(
           `products/${Date.now()}-${imageFile.name.replace(/\s+/g, '-')}`,
           imageFile,
-          { access: 'public', handleUploadUrl: '/api/assets/upload' },
         )
         imageUrl = blob.url
         imagePathname = blob.pathname
@@ -974,10 +971,10 @@ function ProductForm({
         //    La ficha de Uruguay, el logo y las imágenes se cargan luego
         //    desde la fila del producto.
         if (fichaFile) {
-          const blob = await upload(`fichas/${res.slug}-ar.pdf`, fichaFile, {
-            access: 'private',
-            handleUploadUrl: '/api/assets/upload',
-          })
+          const blob = await uploadAsset(
+            `fichas/${res.slug}-ar.pdf`,
+            fichaFile,
+          )
           const fres = await saveFichaRecord({
             slug: res.slug,
             country: 'ar',
