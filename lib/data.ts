@@ -19,7 +19,7 @@ export type NavItem = {
 }
 
 export const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { label: 'Inicio', href: '/', icon: LayoutDashboard },
   { label: 'Identidad de Marca', href: '/identidad', icon: Fingerprint },
   { label: 'Productos', href: '/productos', icon: Package },
   { label: 'Recursos Comerciales', href: '/recursos', icon: Briefcase, roles: ['comercial'] },
