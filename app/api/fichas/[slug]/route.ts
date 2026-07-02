@@ -1,12 +1,13 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { get } from '@vercel/blob'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { productFichas } from '@/lib/db/schema'
+import { productFichas, FICHA_COUNTRIES, type FichaCountry } from '@/lib/db/schema'
 import { getCurrentUser } from '@/lib/session'
 
-// Sirve la ficha técnica (PDF) de un producto desde un Blob privado.
+// Sirve la ficha técnica (PDF) de un producto y país desde un Blob privado.
 // Requiere sesión: las fichas son visibles para todo el portal.
+// El país se indica con ?country=ar|uy (por defecto 'ar').
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
@@ -17,11 +18,15 @@ export async function GET(
   }
 
   const { slug } = await params
+  const countryParam = request.nextUrl.searchParams.get('country') ?? 'ar'
+  const country: FichaCountry = (FICHA_COUNTRIES as string[]).includes(countryParam)
+    ? (countryParam as FichaCountry)
+    : 'ar'
 
   const [ficha] = await db
     .select()
     .from(productFichas)
-    .where(eq(productFichas.slug, slug))
+    .where(and(eq(productFichas.slug, slug), eq(productFichas.country, country)))
   if (!ficha || !ficha.filePathname) {
     return NextResponse.json({ error: 'La ficha no existe.' }, { status: 404 })
   }
@@ -32,7 +37,7 @@ export async function GET(
       return NextResponse.json({ error: 'No se pudo obtener la ficha.' }, { status: 404 })
     }
 
-    const fileName = ficha.fileName ?? `ficha-${slug}.pdf`
+    const fileName = ficha.fileName ?? `ficha-${slug}-${country}.pdf`
     // Por defecto se abre en línea (previsualización); con ?download=1 se descarga.
     const forceDownload = request.nextUrl.searchParams.get('download') === '1'
     const disposition = forceDownload ? 'attachment' : 'inline'
