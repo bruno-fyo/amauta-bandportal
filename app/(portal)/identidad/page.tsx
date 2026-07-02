@@ -1,10 +1,26 @@
 import { Suspense } from 'react'
+import Image from 'next/image'
 import { PageHeader, SectionHeading } from '@/components/portal/section-heading'
 import { Badge } from '@/components/ui/badge'
 import { AmautaWordmark, AmautaIso } from '@/components/brand/logo'
 import { AssetExplorer } from '@/components/portal/asset-explorer'
 import { AssetGridSkeleton } from '@/components/portal/asset-skeleton'
 import { getAssetsForUser } from '@/app/actions/assets'
+
+const purposePillars = [
+  {
+    title: 'Propósito',
+    text: 'Ayudar a los productores a producir más y mejor, cuidando la salud del suelo.',
+  },
+  {
+    title: 'Posicionamiento',
+    text: 'Una agricultura que nutre sin comprometer el futuro: sembrar con inteligencia es cosechar con abundancia.',
+  },
+  {
+    title: 'Propuesta de valor',
+    text: 'Una amplia paleta de soluciones nutricionales, diseñadas para adaptarse a cada realidad agronómica.',
+  },
+]
 
 const palette = [
   { name: 'Tierra Amauta', hex: '#623B2A', pantone: 'Pantone 477C', light: false },
@@ -20,6 +36,55 @@ export default function IdentidadPage() {
         title="Identidad de Marca"
         description="Logotipos, paleta cromática, tipografía y lineamientos oficiales de Amauta."
       />
+
+      {/* ¿Quiénes somos? */}
+      <section className="mb-14 overflow-hidden rounded-3xl border border-border bg-card">
+        <div className="grid grid-cols-1 lg:grid-cols-2">
+          <div className="relative min-h-[280px] lg:min-h-full">
+            <Image
+              src="/images/people-field.png"
+              alt="Equipo de Amauta en el campo, junto a los productores"
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#1d1b16]/60 via-transparent to-transparent lg:bg-gradient-to-r" />
+          </div>
+
+          <div className="flex flex-col justify-center gap-6 p-8 md:p-12">
+            <div>
+              <Badge variant="accent" size="md">
+                ¿Quiénes somos?
+              </Badge>
+              <h2 className="mt-4 text-balance font-heading text-3xl font-bold leading-tight text-foreground md:text-4xl">
+                Evolucionando la agricultura
+              </h2>
+              <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
+                En Amauta potenciamos los rindes a través de la nutrición
+                vegetal, pero con una mirada distinta: creemos en una
+                agricultura que nutre sin comprometer el futuro y que cuida la
+                salud del suelo en cada decisión.
+              </p>
+            </div>
+
+            <dl className="grid gap-4 sm:grid-cols-3">
+              {purposePillars.map((pillar) => (
+                <div
+                  key={pillar.title}
+                  className="rounded-2xl border border-border bg-background p-4"
+                >
+                  <dt className="font-heading text-sm font-bold text-primary">
+                    {pillar.title}
+                  </dt>
+                  <dd className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                    {pillar.text}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </section>
 
       {/* Logo showcase */}
       <section className="mb-14 grid grid-cols-1 gap-5 lg:grid-cols-3">

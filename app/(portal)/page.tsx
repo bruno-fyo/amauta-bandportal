@@ -47,8 +47,6 @@ const categoryImages: Record<string, string> = {
   recursos: '/images/people-field.png',
   'kit-distribuidor': '/images/field-aerial.png',
   redes: '/images/crop-maiz.png',
-  imagenes: '/images/crop-girasol.png',
-  videos: '/images/field-aerial.png',
   campanas: '/images/campaign-trigo.png',
 }
 

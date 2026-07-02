@@ -5,8 +5,6 @@ import {
   Briefcase,
   PackageOpen,
   Share2,
-  Images,
-  Video,
   Megaphone,
   type LucideIcon,
 } from 'lucide-react'
@@ -27,8 +25,6 @@ export const navItems: NavItem[] = [
   { label: 'Recursos Comerciales', href: '/recursos', icon: Briefcase, roles: ['comercial'] },
   { label: 'Kit del Distribuidor', href: '/kit-distribuidor', icon: PackageOpen, roles: ['distribuidor'] },
   { label: 'Redes Sociales', href: '/redes', icon: Share2 },
-  { label: 'Banco de Imágenes', href: '/imagenes', icon: Images },
-  { label: 'Videos', href: '/videos', icon: Video },
   { label: 'Campañas', href: '/campanas', icon: Megaphone },
 ]
 

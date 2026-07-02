@@ -73,7 +73,7 @@ export const assets = pgTable('assets', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
   description: text('description'),
-  // Categoría del portal: identidad, productos, recursos, imagenes, videos, redes, campanas
+  // Categoría del portal: identidad, productos, recursos, kit-distribuidor, redes, campanas
   category: text('category').notNull(),
   // Tipo de archivo: pdf, png, svg, zip, jpg, mp4, ...
   fileType: text('fileType').notNull(),
