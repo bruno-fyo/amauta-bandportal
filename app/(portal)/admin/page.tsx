@@ -23,11 +23,26 @@ export default async function AdminPage() {
 
   const totalProducts = catalog.reduce((n, f) => n + f.products.length, 0)
 
-  // Serializamos las fechas para pasar los datos al componente cliente.
+  // Serializamos las fichas por país para pasarlas al componente cliente.
   const fichaInfos = Object.fromEntries(
-    Object.entries(fichas).map(([slug, f]) => [
+    Object.entries(fichas).map(([slug, byCountry]) => [
       slug,
-      { fileName: f.fileName, fileSize: f.fileSize, updatedAt: f.updatedAt },
+      {
+        ar: byCountry.ar
+          ? {
+              fileName: byCountry.ar.fileName,
+              fileSize: byCountry.ar.fileSize,
+              updatedAt: byCountry.ar.updatedAt,
+            }
+          : undefined,
+        uy: byCountry.uy
+          ? {
+              fileName: byCountry.uy.fileName,
+              fileSize: byCountry.uy.fileSize,
+              updatedAt: byCountry.uy.updatedAt,
+            }
+          : undefined,
+      },
     ]),
   )
 

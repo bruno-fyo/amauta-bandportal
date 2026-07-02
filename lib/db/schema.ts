@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, serial, integer } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean, serial, integer, primaryKey } from 'drizzle-orm/pg-core'
 
 // ---------------------------------------------------------------------------
 // Better Auth tables. Column names are camelCase to match Better Auth defaults.
@@ -98,29 +98,64 @@ export const assets = pgTable('assets', {
 export type Asset = typeof assets.$inferSelect
 
 // ---------------------------------------------------------------------------
-// Fichas técnicas de productos. Una ficha (PDF) por producto, identificada por
-// el `slug` del producto (tabla `products`). Es autogestionable por el admin:
-// se puede subir, reemplazar o eliminar sin tocar el código.
+// Fichas técnicas de productos. Hay una ficha (PDF) por producto y por país
+// (Argentina / Uruguay), identificada por (slug, country). Autogestionable
+// por el admin: se puede subir, reemplazar o eliminar sin tocar el código.
 // ---------------------------------------------------------------------------
-export const productFichas = pgTable('product_fichas', {
+export const productFichas = pgTable(
+  'product_fichas',
+  {
+    // Slug del producto (coincide con products.slug).
+    slug: text('slug').notNull(),
+    // País de la ficha: 'ar' (Argentina) | 'uy' (Uruguay).
+    country: text('country').notNull().default('ar'),
+    // Datos del PDF en Vercel Blob (privado).
+    fileName: text('fileName'),
+    filePathname: text('filePathname').notNull(),
+    fileUrl: text('fileUrl').notNull(),
+    fileSize: integer('fileSize'),
+    // Usuario admin que subió/actualizó la ficha.
+    uploadedBy: text('uploadedBy').notNull(),
+    createdAt: timestamp('createdAt')
+      .$defaultFn(() => new Date())
+      .notNull(),
+    updatedAt: timestamp('updatedAt')
+      .$defaultFn(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.slug, table.country] }),
+  }),
+)
+
+export type ProductFicha = typeof productFichas.$inferSelect
+export type FichaCountry = 'ar' | 'uy'
+export const FICHA_COUNTRIES: FichaCountry[] = ['ar', 'uy']
+export const FICHA_COUNTRY_LABELS: Record<FichaCountry, string> = {
+  ar: 'Argentina',
+  uy: 'Uruguay',
+}
+
+// ---------------------------------------------------------------------------
+// Imágenes descargables del producto (galería). Varias por producto.
+// ---------------------------------------------------------------------------
+export const productImages = pgTable('product_images', {
+  id: serial('id').primaryKey(),
   // Slug del producto (coincide con products.slug).
-  slug: text('slug').primaryKey(),
-  // Datos del PDF en Vercel Blob (privado).
+  slug: text('slug').notNull(),
+  // Datos de la imagen en Vercel Blob (público, descargable).
   fileName: text('fileName'),
   filePathname: text('filePathname').notNull(),
   fileUrl: text('fileUrl').notNull(),
   fileSize: integer('fileSize'),
-  // Usuario admin que subió/actualizó la ficha.
   uploadedBy: text('uploadedBy').notNull(),
+  sortOrder: integer('sortOrder').notNull().default(0),
   createdAt: timestamp('createdAt')
-    .$defaultFn(() => new Date())
-    .notNull(),
-  updatedAt: timestamp('updatedAt')
     .$defaultFn(() => new Date())
     .notNull(),
 })
 
-export type ProductFicha = typeof productFichas.$inferSelect
+export type ProductImage = typeof productImages.$inferSelect
 
 // ---------------------------------------------------------------------------
 // Catálogo administrable: familias y productos. El administrador puede crear,
@@ -159,6 +194,9 @@ export const products = pgTable('products', {
   imageUrl: text('imageUrl'),
   // Pathname en Blob (solo si la imagen se subió a Blob), para poder borrarla.
   imagePathname: text('imagePathname'),
+  // Logo del producto (Blob público, descargable). Opcional.
+  logoUrl: text('logoUrl'),
+  logoPathname: text('logoPathname'),
   isNew: boolean('isNew').notNull().default(false),
   sortOrder: integer('sortOrder').notNull().default(0),
   createdAt: timestamp('createdAt')

@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, Download, FileText, Sparkles } from 'lucide-react'
+import { ChevronDown, Download, ImageIcon, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Flag } from '@/components/portal/flag'
+import { FICHA_COUNTRY_LABELS } from '@/lib/db/schema'
 import type { CatalogFamily, CatalogProduct } from '@/app/actions/catalog'
 
 export function ProductCatalog({ families }: { families: CatalogFamily[] }) {
@@ -180,32 +182,101 @@ function ProductCard({
           </h3>
         </div>
 
-        <FichaButton product={product} />
+        <ProductDownloads product={product} />
       </div>
     </article>
   )
 }
 
-function FichaButton({ product }: { product: CatalogProduct }) {
-  if (product.hasFicha) {
+function ProductDownloads({ product }: { product: CatalogProduct }) {
+  const hasAnything =
+    product.logoUrl ||
+    product.images.length > 0 ||
+    product.hasFichaAr ||
+    product.hasFichaUy
+
+  if (!hasAnything) {
     return (
-      <a
-        href={`/api/fichas/${product.slug}?download=1`}
-        className="mt-auto inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-      >
-        <Download className="size-3.5" aria-hidden="true" />
-        Descargar ficha técnica
-      </a>
+      <span className="mt-auto inline-flex h-9 w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg bg-muted px-2 text-xs font-semibold text-muted-foreground">
+        Material próximamente
+      </span>
     )
   }
 
   return (
-    <span
-      className="mt-auto inline-flex h-9 w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg bg-muted px-2 text-xs font-semibold text-muted-foreground"
-      title="La ficha técnica estará disponible próximamente"
+    <div className="mt-auto flex flex-col gap-2">
+      {/* Fichas técnicas por país */}
+      {(product.hasFichaAr || product.hasFichaUy) && (
+        <div className="flex flex-col gap-1.5">
+          {product.hasFichaAr ? (
+            <FichaLink slug={product.slug} country="ar" />
+          ) : null}
+          {product.hasFichaUy ? (
+            <FichaLink slug={product.slug} country="uy" />
+          ) : null}
+        </div>
+      )}
+
+      {/* Logo e imágenes */}
+      {(product.logoUrl || product.images.length > 0) && (
+        <div className="flex flex-wrap gap-1.5">
+          {product.logoUrl ? (
+            <a
+              href={product.logoUrl}
+              download
+              className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-2 text-[11px] font-semibold text-foreground transition-colors hover:bg-muted"
+              title={`Descargar logo de ${product.name}`}
+            >
+              <Download className="size-3" aria-hidden="true" />
+              Logo
+            </a>
+          ) : null}
+          {product.images.length > 0 ? (
+            <a
+              href={product.images[0].fileUrl}
+              download
+              className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-2 text-[11px] font-semibold text-foreground transition-colors hover:bg-muted"
+              title={`Descargar imagen de ${product.name}`}
+            >
+              <ImageIcon className="size-3" aria-hidden="true" />
+              {product.images.length > 1
+                ? `Imágenes (${product.images.length})`
+                : 'Imagen'}
+            </a>
+          ) : null}
+        </div>
+      )}
+
+      {/* Imágenes adicionales (a partir de la segunda) */}
+      {product.images.length > 1 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {product.images.slice(1).map((img, i) => (
+            <a
+              key={img.id}
+              href={img.fileUrl}
+              download
+              className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              title={img.fileName ?? `Imagen ${i + 2}`}
+              aria-label={`Descargar imagen ${i + 2} de ${product.name}`}
+            >
+              <Download className="size-3" aria-hidden="true" />
+            </a>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function FichaLink({ slug, country }: { slug: string; country: 'ar' | 'uy' }) {
+  return (
+    <a
+      href={`/api/fichas/${slug}?country=${country}&download=1`}
+      className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
     >
-      <FileText className="size-3.5" aria-hidden="true" />
-      Ficha próximamente
-    </span>
+      <Flag country={country} className="h-3 w-[18px]" />
+      Ficha {FICHA_COUNTRY_LABELS[country]}
+      <Download className="size-3.5" aria-hidden="true" />
+    </a>
   )
 }

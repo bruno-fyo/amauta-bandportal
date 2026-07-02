@@ -4,10 +4,22 @@ import { revalidatePath } from 'next/cache'
 import { del } from '@vercel/blob'
 import { asc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { productFamilies, products, productFichas } from '@/lib/db/schema'
+import {
+  productFamilies,
+  products,
+  productFichas,
+  productImages,
+} from '@/lib/db/schema'
 import { requireAdmin, getCurrentUser } from '@/lib/session'
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
+
+export type CatalogProductImage = {
+  id: number
+  fileName: string | null
+  fileUrl: string
+  fileSize: number | null
+}
 
 export type CatalogProduct = {
   id: string
@@ -15,8 +27,11 @@ export type CatalogProduct = {
   name: string
   color: string
   imageUrl: string | null
+  logoUrl: string | null
   isNew: boolean
-  hasFicha: boolean
+  images: CatalogProductImage[]
+  hasFichaAr: boolean
+  hasFichaUy: boolean
 }
 
 export type CatalogFamily = {
@@ -62,13 +77,26 @@ export async function getCatalog(): Promise<CatalogFamily[]> {
   const user = await getCurrentUser()
   if (!user) return []
 
-  const [families, prods, fichas] = await Promise.all([
+  const [families, prods, fichas, images] = await Promise.all([
     db.select().from(productFamilies).orderBy(asc(productFamilies.sortOrder), asc(productFamilies.name)),
     db.select().from(products).orderBy(asc(products.sortOrder), asc(products.name)),
-    db.select({ slug: productFichas.slug }).from(productFichas),
+    db.select({ slug: productFichas.slug, country: productFichas.country }).from(productFichas),
+    db.select().from(productImages).orderBy(asc(productImages.sortOrder), asc(productImages.id)),
   ])
 
-  const fichaSet = new Set(fichas.map((f) => f.slug))
+  const fichaArSet = new Set(fichas.filter((f) => f.country === 'ar').map((f) => f.slug))
+  const fichaUySet = new Set(fichas.filter((f) => f.country === 'uy').map((f) => f.slug))
+
+  const imagesBySlug = images.reduce<Record<string, CatalogProductImage[]>>((acc, img) => {
+    acc[img.slug] = acc[img.slug] ?? []
+    acc[img.slug].push({
+      id: img.id,
+      fileName: img.fileName,
+      fileUrl: img.fileUrl,
+      fileSize: img.fileSize,
+    })
+    return acc
+  }, {})
 
   return families.map((fam) => ({
     id: fam.id,
@@ -84,8 +112,11 @@ export async function getCatalog(): Promise<CatalogFamily[]> {
         name: p.name,
         color: p.color,
         imageUrl: p.imageUrl,
+        logoUrl: p.logoUrl,
         isNew: p.isNew,
-        hasFicha: fichaSet.has(p.slug),
+        images: imagesBySlug[p.slug] ?? [],
+        hasFichaAr: fichaArSet.has(p.slug),
+        hasFichaUy: fichaUySet.has(p.slug),
       })),
   }))
 }
@@ -186,9 +217,9 @@ export async function deleteFamily(id: string): Promise<ActionResult> {
       .from(products)
       .where(eq(products.familyId, id))
 
-    // Limpia imágenes y fichas de cada producto de la familia.
+    // Limpia imágenes, logo y fichas de cada producto de la familia.
     for (const p of familyProducts) {
-      await cleanupProductAssets(p.slug, p.imagePathname)
+      await cleanupProductAssets(p.slug, p.imagePathname, p.logoPathname)
     }
     await db.delete(products).where(eq(products.familyId, id))
     await db.delete(productFamilies).where(eq(productFamilies.id, id))
@@ -228,26 +259,56 @@ async function uniqueProductSlug(base: string): Promise<string> {
   }
 }
 
-// Borra del Blob la imagen (si es un archivo subido) y la ficha del producto.
-async function cleanupProductAssets(slug: string, imagePathname: string | null) {
-  if (imagePathname) {
+// Borra del Blob la imagen mock-up, el logo, las imágenes de la galería y todas
+// las fichas (AR/UY) de un producto, junto con sus registros.
+async function cleanupProductAssets(
+  slug: string,
+  imagePathname: string | null,
+  logoPathname?: string | null,
+) {
+  const toDelete = [imagePathname, logoPathname].filter(Boolean) as string[]
+  for (const pathname of toDelete) {
     try {
-      await del(imagePathname)
+      await del(pathname)
     } catch (e) {
-      console.error('[v0] blob del (imagen producto) error:', e)
+      console.error('[v0] blob del (imagen/logo producto) error:', e)
     }
   }
-  const [ficha] = await db
+
+  // Fichas técnicas (todas las que existan para el producto).
+  const fichas = await db
     .select()
     .from(productFichas)
     .where(eq(productFichas.slug, slug))
-  if (ficha?.fileUrl) {
-    try {
-      await del(ficha.fileUrl)
-    } catch (e) {
-      console.error('[v0] blob del (ficha producto) error:', e)
+  for (const ficha of fichas) {
+    if (ficha.fileUrl) {
+      try {
+        await del(ficha.fileUrl)
+      } catch (e) {
+        console.error('[v0] blob del (ficha producto) error:', e)
+      }
     }
+  }
+  if (fichas.length > 0) {
     await db.delete(productFichas).where(eq(productFichas.slug, slug))
+  }
+
+  // Imágenes descargables de la galería.
+  const imgs = await db
+    .select()
+    .from(productImages)
+    .where(eq(productImages.slug, slug))
+  for (const img of imgs) {
+    if (img.filePathname) {
+      try {
+        await del(img.filePathname)
+      } catch (e) {
+        console.error('[v0] blob del (imagen galería) error:', e)
+      }
+    }
+  }
+  if (imgs.length > 0) {
+    await db.delete(productImages).where(eq(productImages.slug, slug))
   }
 }
 
@@ -359,7 +420,7 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
     const [row] = await db.select().from(products).where(eq(products.id, id))
     if (!row) return { ok: false, error: 'El producto ya no existe.' }
 
-    await cleanupProductAssets(row.slug, row.imagePathname)
+    await cleanupProductAssets(row.slug, row.imagePathname, row.logoPathname)
     await db.delete(products).where(eq(products.id, id))
 
     revalidatePath('/admin')
@@ -368,5 +429,144 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   } catch (err) {
     console.error('[v0] deleteProduct error:', err)
     return { ok: false, error: 'No se pudo eliminar el producto.' }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Logo del producto (Blob público, descargable)
+// ---------------------------------------------------------------------------
+export type LogoInput = {
+  productId: string
+  fileUrl: string
+  filePathname: string
+}
+
+// Guarda/reemplaza el logo del producto. Borra el logo anterior del Blob.
+export async function saveProductLogo(input: LogoInput): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    if (!input.fileUrl || !input.filePathname)
+      return { ok: false, error: 'Falta la información del logo subido.' }
+
+    const [existing] = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, input.productId))
+    if (!existing) return { ok: false, error: 'El producto no existe.' }
+
+    if (existing.logoPathname && existing.logoPathname !== input.filePathname) {
+      try {
+        await del(existing.logoPathname)
+      } catch (e) {
+        console.error('[v0] blob del (reemplazo logo) error:', e)
+      }
+    }
+
+    await db
+      .update(products)
+      .set({ logoUrl: input.fileUrl, logoPathname: input.filePathname, updatedAt: new Date() })
+      .where(eq(products.id, input.productId))
+
+    revalidatePath('/admin')
+    revalidatePath('/productos')
+    return { ok: true }
+  } catch (err) {
+    console.error('[v0] saveProductLogo error:', err)
+    return { ok: false, error: 'No se pudo guardar el logo.' }
+  }
+}
+
+export async function deleteProductLogo(productId: string): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const [existing] = await db.select().from(products).where(eq(products.id, productId))
+    if (!existing) return { ok: false, error: 'El producto no existe.' }
+
+    if (existing.logoPathname) {
+      try {
+        await del(existing.logoPathname)
+      } catch (e) {
+        console.error('[v0] blob del (logo) error:', e)
+      }
+    }
+
+    await db
+      .update(products)
+      .set({ logoUrl: null, logoPathname: null, updatedAt: new Date() })
+      .where(eq(products.id, productId))
+
+    revalidatePath('/admin')
+    revalidatePath('/productos')
+    return { ok: true }
+  } catch (err) {
+    console.error('[v0] deleteProductLogo error:', err)
+    return { ok: false, error: 'No se pudo eliminar el logo.' }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Imágenes descargables del producto (galería)
+// ---------------------------------------------------------------------------
+export type ProductImageInput = {
+  slug: string
+  fileName: string
+  filePathname: string
+  fileUrl: string
+  fileSize: number
+}
+
+export async function addProductImage(input: ProductImageInput): Promise<ActionResult> {
+  try {
+    const admin = await requireAdmin()
+    const slug = input.slug.trim()
+    if (!slug) return { ok: false, error: 'Falta el producto.' }
+    if (!input.fileUrl || !input.filePathname)
+      return { ok: false, error: 'Falta la información de la imagen subida.' }
+
+    const siblings = await db
+      .select({ id: productImages.id })
+      .from(productImages)
+      .where(eq(productImages.slug, slug))
+
+    await db.insert(productImages).values({
+      slug,
+      fileName: input.fileName,
+      filePathname: input.filePathname,
+      fileUrl: input.fileUrl,
+      fileSize: input.fileSize,
+      uploadedBy: admin.id,
+      sortOrder: siblings.length,
+    })
+
+    revalidatePath('/admin')
+    revalidatePath('/productos')
+    return { ok: true }
+  } catch (err) {
+    console.error('[v0] addProductImage error:', err)
+    return { ok: false, error: 'No se pudo agregar la imagen.' }
+  }
+}
+
+export async function deleteProductImage(id: number): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const [row] = await db.select().from(productImages).where(eq(productImages.id, id))
+    if (!row) return { ok: false, error: 'La imagen ya no existe.' }
+
+    if (row.filePathname) {
+      try {
+        await del(row.filePathname)
+      } catch (e) {
+        console.error('[v0] blob del (imagen galería) error:', e)
+      }
+    }
+
+    await db.delete(productImages).where(eq(productImages.id, id))
+    revalidatePath('/admin')
+    revalidatePath('/productos')
+    return { ok: true }
+  } catch (err) {
+    console.error('[v0] deleteProductImage error:', err)
+    return { ok: false, error: 'No se pudo eliminar la imagen.' }
   }
 }
