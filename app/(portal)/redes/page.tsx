@@ -1,6 +1,11 @@
 import Image from 'next/image'
-import { Instagram, Facebook, Linkedin, ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { PageHeader } from '@/components/portal/section-heading'
+import {
+  InstagramIcon,
+  FacebookIcon,
+  LinkedinIcon,
+} from '@/components/portal/social-icons'
 
 const networks = [
   {
@@ -8,21 +13,21 @@ const networks = [
     handle: '@amautaagro',
     description: 'Novedades, campañas y el día a día en el campo.',
     href: 'https://www.instagram.com/amautaagro/',
-    icon: Instagram,
+    icon: InstagramIcon,
   },
   {
     name: 'Facebook',
     handle: 'AmautaAgro',
     description: 'Comunidad, eventos y lanzamientos de producto.',
     href: 'https://www.facebook.com/AmautaAgro',
-    icon: Facebook,
+    icon: FacebookIcon,
   },
   {
     name: 'LinkedIn',
     handle: 'Amauta Agro',
     description: 'Mirada institucional, equipo y oportunidades.',
     href: 'https://www.linkedin.com/company/amautaagro',
-    icon: Linkedin,
+    icon: LinkedinIcon,
   },
 ]
 
