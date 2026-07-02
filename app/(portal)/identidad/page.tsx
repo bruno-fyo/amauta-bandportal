@@ -42,8 +42,8 @@ export default function IdentidadPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2">
           <div className="relative min-h-[280px] lg:min-h-full">
             <Image
-              src="/images/people-field.png"
-              alt="Equipo de Amauta en el campo, junto a los productores"
+              src="/images/brote-suelo.jpg"
+              alt="Brote verde emergiendo de la tierra fértil, iluminado por el sol"
               fill
               sizes="(min-width: 1024px) 50vw, 100vw"
               className="object-cover"
