@@ -281,9 +281,9 @@ async function cleanupProductAssets(
     .from(productFichas)
     .where(eq(productFichas.slug, slug))
   for (const ficha of fichas) {
-    if (ficha.fileUrl) {
+    if (ficha.filePathname) {
       try {
-        await del(ficha.fileUrl)
+        await del(ficha.filePathname)
       } catch (e) {
         console.error('[v0] blob del (ficha producto) error:', e)
       }
