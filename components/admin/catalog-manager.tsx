@@ -412,7 +412,7 @@ function ProductRow({
   const fichaUyRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState<string | null>(null)
 
-  const fichaRef: Record<FichaCountry, React.RefObject<HTMLInputElement>> = {
+  const fichaRef: Record<FichaCountry, React.RefObject<HTMLInputElement | null>> = {
     ar: fichaArRef,
     uy: fichaUyRef,
   }
