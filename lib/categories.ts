@@ -8,8 +8,6 @@ export type CategoryKey =
   | 'recursos'
   | 'kit-distribuidor'
   | 'redes'
-  | 'imagenes'
-  | 'videos'
   | 'campanas'
 
 export type CategoryMeta = {
@@ -29,8 +27,6 @@ export const CATEGORIES: CategoryMeta[] = [
   // Kit del Distribuidor: solo distribuidores.
   { key: 'kit-distribuidor', label: 'Kit del Distribuidor', href: '/kit-distribuidor', roles: ['distribuidor'] },
   { key: 'redes', label: 'Redes Sociales', href: '/redes' },
-  { key: 'imagenes', label: 'Banco de Imágenes', href: '/imagenes' },
-  { key: 'videos', label: 'Videos', href: '/videos' },
   { key: 'campanas', label: 'Campañas', href: '/campanas' },
 ]
 
