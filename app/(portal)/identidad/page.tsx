@@ -56,9 +56,14 @@ export default function IdentidadPage() {
               <Badge variant="accent" size="md">
                 ¿Quiénes somos?
               </Badge>
-              <h2 className="mt-4 text-balance font-heading text-3xl font-bold leading-tight text-foreground md:text-4xl">
-                Evolucionando la agricultura
-              </h2>
+              <div className="mt-4 space-y-0">
+                <p className="text-balance font-heading text-3xl font-light leading-tight text-foreground md:text-4xl">
+                  Evolucionando
+                </p>
+                <p className="text-balance font-heading text-3xl font-bold leading-tight text-foreground md:text-4xl">
+                  la agricultura
+                </p>
+              </div>
               <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
                 En Amauta potenciamos los rindes a través de la nutrición
                 vegetal, pero con una mirada distinta: creemos en una
