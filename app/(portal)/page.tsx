@@ -95,6 +95,9 @@ export default async function DashboardPage() {
 
         <div className="relative flex flex-col gap-8 p-8 md:p-14">
           <div className="max-w-2xl">
+            <p className="mb-3 text-pretty font-heading text-xl font-semibold text-accent md:text-2xl">
+              {`¡Hola ${user.name.split(' ')[0]}!`}
+            </p>
             <h1 className="text-balance font-heading text-4xl font-bold leading-[1.05] text-[#fcf9f6] md:text-5xl lg:text-6xl">
               Centro de Recursos Amauta
             </h1>
