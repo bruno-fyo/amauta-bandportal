@@ -14,11 +14,44 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  ? process.env.NEXT_PUBLIC_SITE_URL
+  : process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'http://localhost:3000'
+
+const siteTitle = 'Centro de Recursos Amauta'
+const siteDescription =
+  'Portal oficial de recursos de marca, productos y comunicación de Amauta. Todo el material en un único lugar.'
+
 export const metadata: Metadata = {
-  title: 'Centro de Recursos Amauta',
-  description:
-    'Portal oficial de recursos de marca, productos y comunicación de Amauta. Todo el material en un único lugar.',
+  metadataBase: new URL(siteUrl),
+  title: siteTitle,
+  description: siteDescription,
   generator: 'v0.app',
+  openGraph: {
+    type: 'website',
+    siteName: siteTitle,
+    title: siteTitle,
+    description: siteDescription,
+    locale: 'es_AR',
+    url: siteUrl,
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        type: 'image/png',
+        alt: siteTitle,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteTitle,
+    description: siteDescription,
+    images: ['/og-image.png'],
+  },
 }
 
 export const viewport: Viewport = {
