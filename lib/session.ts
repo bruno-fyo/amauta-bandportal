@@ -62,7 +62,6 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     image: u.image,
   }
 }
-}
 
 // Exige una sesión válida; si no existe, redirige a /login.
 export async function requireUser(): Promise<SessionUser> {
