@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 
-export function LoginForm() {
+export function LoginForm({ showMicrosoft = false }: { showMicrosoft?: boolean }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -99,6 +99,29 @@ export function LoginForm() {
           )}
         </button>
       </form>
+
+      {showMicrosoft && (
+        <>
+          <div className="mt-6 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs font-medium text-muted-foreground">o</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <a
+            href="/api/auth/b2c/login"
+            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+          >
+            <svg viewBox="0 0 21 21" className="size-4" aria-hidden="true">
+              <rect x="1" y="1" width="9" height="9" fill="#f25022" />
+              <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+              <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
+              <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+            </svg>
+            Ingresar como colaborador Amauta
+          </a>
+        </>
+      )}
 
       <p className="mt-8 text-center text-xs text-muted-foreground text-pretty">
         El acceso es exclusivo para el equipo y la red de Amauta. Si necesitás una cuenta, solicitala
