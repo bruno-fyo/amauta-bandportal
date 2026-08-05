@@ -22,8 +22,8 @@ export type CategoryMeta = {
 export const CATEGORIES: CategoryMeta[] = [
   { key: 'identidad', label: 'Identidad de Marca', href: '/identidad' },
   { key: 'productos', label: 'Productos', href: '/productos' },
-  // Recursos Comerciales: solo colaboradores (rol "comercial").
-  { key: 'recursos', label: 'Recursos Comerciales', href: '/recursos', roles: ['comercial'] },
+  // Recursos Comerciales: solo colaboradores (rol "colaborador").
+  { key: 'recursos', label: 'Recursos Comerciales', href: '/recursos', roles: ['colaborador'] },
   // Kit del Distribuidor: solo distribuidores.
   { key: 'kit-distribuidor', label: 'Kit del Distribuidor', href: '/kit-distribuidor', roles: ['distribuidor'] },
   { key: 'redes', label: 'Redes Sociales', href: '/redes' },
@@ -66,4 +66,4 @@ export const FILE_TYPES = [
 export type FileTypeOption = (typeof FILE_TYPES)[number]
 
 // Roles que pueden recibir visibilidad (todos menos que se restrinja).
-export const VISIBILITY_ROLES: Role[] = ['admin', 'distribuidor', 'comercial']
+export const VISIBILITY_ROLES: Role[] = ['admin', 'distribuidor', 'colaborador']

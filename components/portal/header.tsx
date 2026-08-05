@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { Search, Bell, Menu, X, RefreshCw, LogOut } from 'lucide-react'
 import { AmautaIso } from '@/components/brand/logo'
 import { authClient } from '@/lib/auth-client'
@@ -19,14 +19,19 @@ function getInitials(name: string) {
 
 export function Header({ user }: { user: SessionUser }) {
   const pathname = usePathname()
-  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
   async function handleSignOut() {
-    await authClient.signOut()
-    router.push('/login')
-    router.refresh()
+    // Cierra la sesión legacy de Better Auth (si existiera) y luego pasa por la
+    // ruta de logout de B2C, que borra la cookie propia y cierra sesión en el
+    // proveedor antes de volver al ingreso.
+    try {
+      await authClient.signOut()
+    } catch {
+      // Ignorar: puede no haber sesión de Better Auth (usuario de B2C).
+    }
+    window.location.href = '/api/auth/b2c/logout'
   }
 
   return (

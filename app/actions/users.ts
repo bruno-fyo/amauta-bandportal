@@ -43,7 +43,7 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
     const name = String(formData.get('name') ?? '').trim()
     const email = String(formData.get('email') ?? '').trim().toLowerCase()
     const password = String(formData.get('password') ?? '')
-    const role = String(formData.get('role') ?? 'comercial') as Role
+    const role = String(formData.get('role') ?? 'colaborador') as Role
 
     if (!name) return { ok: false, error: 'El nombre es obligatorio.' }
     if (!email || !email.includes('@'))

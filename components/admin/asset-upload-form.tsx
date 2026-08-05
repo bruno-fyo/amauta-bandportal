@@ -19,7 +19,7 @@ const inputClass =
 export function AssetUploadForm() {
   const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
-  const [visibility, setVisibility] = useState<Role[]>(['distribuidor', 'comercial'])
+  const [visibility, setVisibility] = useState<Role[]>(['distribuidor', 'colaborador'])
   const [fileName, setFileName] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -90,7 +90,7 @@ export function AssetUploadForm() {
       setSuccess(true)
       setFileName(null)
       formRef.current?.reset()
-      setVisibility(['distribuidor', 'comercial'])
+      setVisibility(['distribuidor', 'colaborador'])
       router.refresh()
       setTimeout(() => setSuccess(false), 4000)
     } catch (err) {

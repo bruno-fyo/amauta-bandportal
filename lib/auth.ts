@@ -17,6 +17,7 @@ const trustedOrigins = [
   'https://*.v0.dev',
   'https://*.v0.app',
   'https://*.vercel.app',
+  'https://*.vercel.run',
   process.env.V0_RUNTIME_URL,
   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
   process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -37,7 +38,7 @@ export const auth = betterAuth({
       role: {
         type: 'string',
         required: false,
-        defaultValue: 'comercial',
+        defaultValue: 'colaborador',
         input: false, // el rol no se puede setear desde el cliente al registrarse
       },
     },

@@ -9,13 +9,13 @@ import { ROLES, ROLE_LABELS, type Role } from '@/lib/db/schema'
 const ROLE_HINTS: Record<Role, string> = {
   admin: 'Acceso total: carga de materiales y gestión de usuarios.',
   distribuidor: 'Accede al material comercial y de distribución.',
-  comercial: 'Accede al material de venta y comunicación.',
+  colaborador: 'Accede al material de venta y comunicación.',
 }
 
 export function UserCreateForm() {
   const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
-  const [role, setRole] = useState<Role>('comercial')
+  const [role, setRole] = useState<Role>('colaborador')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export function UserCreateForm() {
     }
     setSuccess('Cuenta creada correctamente.')
     formRef.current?.reset()
-    setRole('comercial')
+    setRole('colaborador')
     router.refresh()
   }
 
