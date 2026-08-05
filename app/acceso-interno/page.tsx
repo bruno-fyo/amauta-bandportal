@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
-import { AmautaWordmark } from '@/components/brand/logo'
+import { AmautaWordmark, AmautaIso } from '@/components/brand/logo'
 import { LoginForm } from '@/components/auth/login-form'
 import { getCurrentUser } from '@/lib/session'
 
@@ -12,13 +12,18 @@ export default async function AccesoInternoPage() {
   if (user) redirect('/')
 
   return (
-    <main className="flex min-h-dvh bg-background">
+    <main className="flex h-dvh overflow-hidden bg-background">
       {/* Form side */}
-      <div className="flex w-full flex-col justify-center px-6 py-10 sm:px-12 lg:w-[46%] lg:px-20">
+      <div className="flex w-full flex-col justify-center px-6 py-8 sm:px-12 lg:w-[46%] lg:px-20">
         <div className="mx-auto w-full max-w-md">
-          <AmautaWordmark className="h-8 w-auto text-primary" />
+          <div className="flex items-center gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary">
+              <AmautaIso className="h-5 w-auto text-primary-foreground" />
+            </span>
+            <AmautaWordmark className="h-7 w-auto text-primary" />
+          </div>
 
-          <div className="mt-12">
+          <div className="mt-10">
             <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
               Acceso interno
             </h1>
@@ -48,11 +53,11 @@ export default async function AccesoInternoPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#1d1b16]/90 via-[#1d1b16]/35 to-[#1d1b16]/20" />
 
-        <div className="absolute inset-0 flex flex-col justify-end p-14">
-          <div className="max-w-lg">
-            <p className="font-heading text-4xl font-bold leading-tight text-[#fcf9f6]">
+        <div className="absolute inset-0 flex flex-col justify-center p-14">
+          <div className="max-w-lg translate-y-[190px]">
+            <p className="font-heading text-4xl font-normal leading-tight text-[#fcf9f6]">
               Evolucionando
-              <span className="block font-light">la agricultura</span>
+              <span className="block font-bold">la agricultura</span>
             </p>
             <p className="mt-4 text-pretty text-[#fcf9f6]/80">
               Potenciamos los rindes a través de la nutrición vegetal, cuidando
