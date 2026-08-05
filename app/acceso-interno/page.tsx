@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
-import { AmautaWordmark, AmautaIso } from '@/components/brand/logo'
+import { AmautaWordmark } from '@/components/brand/logo'
 import { LoginForm } from '@/components/auth/login-form'
 import { getCurrentUser } from '@/lib/session'
 
@@ -16,12 +16,7 @@ export default async function AccesoInternoPage() {
       {/* Form side */}
       <div className="flex w-full flex-col justify-center px-6 py-8 sm:px-12 lg:w-[46%] lg:px-20">
         <div className="mx-auto w-full max-w-md">
-          <div className="flex items-center gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary">
-              <AmautaIso className="h-5 w-auto text-primary-foreground" />
-            </span>
-            <AmautaWordmark className="h-7 w-auto text-primary" />
-          </div>
+          <AmautaWordmark className="h-8 w-auto text-primary" />
 
           <div className="mt-10">
             <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
