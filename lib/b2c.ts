@@ -11,10 +11,11 @@ const POLICY = process.env.AZURE_B2C_POLICY
 const CLIENT_ID = process.env.AZURE_B2C_CLIENT_ID
 const REDIRECT_URI = process.env.AZURE_B2C_REDIRECT_URI
 const POST_LOGOUT_REDIRECT_URI = process.env.AZURE_B2C_POST_LOGOUT_REDIRECT_URI
-// Dominio del proveedor corporativo (Azure AD) configurado en la política B2C.
-// Si está seteado, B2C salta la pantalla intermedia de selección ("Ingresá
-// acá") y redirige directo al login de Microsoft. Ej: 'amauta.ag' o 'fyo.com'.
-const DOMAIN_HINT = process.env.AZURE_B2C_DOMAIN_HINT
+// Dominio (domain hint) del proveedor corporativo (Azure AD) registrado en la
+// política B2C. Con esto, B2C salta la pantalla intermedia de selección
+// ("Ingresá acá") y redirige directo al login corporativo de Microsoft.
+// Valor tomado de Azure Portal → Identity providers → Domain hint.
+const DOMAIN_HINT = 'intranet.fyo.com'
 
 // ¿Está configurada la integración B2C? (permite degradar con elegancia).
 export function b2cConfigured(): boolean {
