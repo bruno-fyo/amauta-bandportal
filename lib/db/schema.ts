@@ -12,12 +12,17 @@ export const user = pgTable('user', {
     .$defaultFn(() => false)
     .notNull(),
   image: text('image'),
-  // Rol de la aplicación: 'admin' | 'distribuidor' | 'comercial'
-  role: text('role').notNull().default('comercial'),
+  // Rol de la aplicación: 'admin' | 'distribuidor' | 'colaborador'
+  role: text('role').notNull().default('colaborador'),
   // Copia visible de la contraseña (solo para que el admin pueda consultarla).
   // Se completa al crear/actualizar la contraseña desde el panel. Los usuarios
   // creados antes de esta función no la tienen (se muestra "—").
   plainPassword: text('plainPassword'),
+  // ID de objeto (oid) del usuario en Azure AD B2C. Se completa en el primer
+  // login por B2C (find-or-create). Los clientes legacy (Better Auth) lo tienen null.
+  b2cId: text('b2cId').unique(),
+  // Último inicio de sesión (se actualiza en cada login B2C exitoso).
+  lastLoginAt: timestamp('lastLoginAt'),
   createdAt: timestamp('createdAt')
     .$defaultFn(() => new Date())
     .notNull(),
@@ -209,10 +214,10 @@ export const products = pgTable('products', {
 
 export type ProductRow = typeof products.$inferSelect
 
-export type Role = 'admin' | 'distribuidor' | 'comercial'
-export const ROLES: Role[] = ['admin', 'distribuidor', 'comercial']
+export type Role = 'admin' | 'distribuidor' | 'colaborador'
+export const ROLES: Role[] = ['admin', 'distribuidor', 'colaborador']
 export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Administrador',
   distribuidor: 'Distribuidor',
-  comercial: 'Colaborador',
+  colaborador: 'Colaborador',
 }

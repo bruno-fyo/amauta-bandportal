@@ -22,7 +22,7 @@ export const navItems: NavItem[] = [
   { label: 'Inicio', href: '/', icon: LayoutDashboard },
   { label: 'Identidad de Marca', href: '/identidad', icon: Fingerprint },
   { label: 'Productos', href: '/productos', icon: Package },
-  { label: 'Recursos Comerciales', href: '/recursos', icon: Briefcase, roles: ['comercial'] },
+  { label: 'Recursos Comerciales', href: '/recursos', icon: Briefcase, roles: ['colaborador'] },
   { label: 'Kit del Distribuidor', href: '/kit-distribuidor', icon: PackageOpen, roles: ['distribuidor'] },
   { label: 'Redes Sociales', href: '/redes', icon: Share2 },
   { label: 'Campañas', href: '/campanas', icon: Megaphone },

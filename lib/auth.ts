@@ -37,7 +37,7 @@ export const auth = betterAuth({
       role: {
         type: 'string',
         required: false,
-        defaultValue: 'comercial',
+        defaultValue: 'colaborador',
         input: false, // el rol no se puede setear desde el cliente al registrarse
       },
     },
