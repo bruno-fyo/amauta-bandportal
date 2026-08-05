@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ingreso — Centro de Recursos Amauta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --background: #fcfaf7;
+      --foreground: #2a211a;
+      --primary: #623b2a;
+      --primary-foreground: #fcf9f6;
+      --muted-foreground: #7c6f63;
+      --accent: #cedc00;
+      --border: #e4dacd;
+      --input-bg: #ffffff;
+      --ring: #623b2a;
+      --destructive: #b3261e;
+      --radius: 0.875rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Titillium Web', system-ui, sans-serif;
+      color: var(--foreground);
+      background: var(--background);
+    }
+
+    /* Layout de dos columnas */
+    .amauta-shell {
+      display: flex;
+      min-height: 100dvh;
+    }
+
+    .amauta-form-side {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+      padding: 2rem 1.5rem;
+    }
+
+    .amauta-inner {
+      width: 100%;
+      max-width: 28rem;
+      margin: 0 auto;
+    }
+
+    .amauta-logo {
+      height: 2rem;
+      width: auto;
+      color: var(--primary);
+      display: block;
+    }
+
+    .amauta-heading {
+      margin: 2.25rem 0 0.35rem;
+      font-size: 1.6rem;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .amauta-sub {
+      margin: 0 0 1.75rem;
+      color: var(--muted-foreground);
+      font-size: 0.95rem;
+    }
+
+    /* Panel derecho con imagen */
+    .amauta-media-side {
+      display: none;
+      position: relative;
+      width: 54%;
+      background-image: linear-gradient(180deg, rgba(38,24,16,0.15), rgba(38,24,16,0.72)), url('https://recursos.amauta.ag/images/login-field.png');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .amauta-media-copy {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3.5rem;
+    }
+
+    .amauta-tagline {
+      max-width: 30rem;
+      font-size: 2.5rem;
+      line-height: 1.1;
+      font-weight: 400;
+      color: #fcf9f6;
+      margin: 0;
+    }
+
+    .amauta-tagline strong {
+      display: block;
+      font-weight: 700;
+    }
+
+    .amauta-tagline-desc {
+      margin-top: 1rem;
+      max-width: 30rem;
+      color: rgba(252, 249, 246, 0.8);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    @media (min-width: 1024px) {
+      .amauta-form-side { width: 46%; padding: 2.5rem 5rem; }
+      .amauta-media-side { display: block; }
+      .amauta-media-copy { justify-content: center; }
+    }
+
+    /* ==========================================================
+       Estilos del formulario que inyecta Azure AD B2C (#api)
+       ========================================================== */
+    #api {
+      width: 100%;
+    }
+
+    #api .intro,
+    #api .intro h2 {
+      display: none; /* usamos nuestro propio encabezado */
+    }
+
+    #api .localAccount { width: 100%; }
+
+    #api .entry { width: 100%; }
+
+    #api .entry-item {
+      margin-bottom: 1rem;
+    }
+
+    #api label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--foreground);
+      margin-bottom: 0.4rem;
+    }
+
+    #api input[type="text"],
+    #api input[type="email"],
+    #api input[type="password"] {
+      width: 100%;
+      height: 2.85rem;
+      padding: 0 0.9rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--foreground);
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) * 0.8);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    #api input:focus {
+      border-color: var(--ring);
+      box-shadow: 0 0 0 3px rgba(98, 59, 42, 0.15);
+    }
+
+    /* Enlace "olvidé mi contraseña" */
+    #api #forgotPassword {
+      display: inline-block;
+      margin-top: 0.35rem;
+      font-size: 0.85rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    #api #forgotPassword:hover { text-decoration: underline; }
+
+    /* Botón principal */
+    #api .buttons {
+      margin-top: 1.5rem;
+    }
+
+    #api button,
+    #api .buttons button {
+      width: 100%;
+      height: 2.95rem;
+      font-size: 0.98rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: var(--primary-foreground);
+      background: var(--primary);
+      border: none;
+      border-radius: calc(var(--radius) * 0.8);
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.05s;
+    }
+    #api button:hover { opacity: 0.92; }
+    #api button:active { transform: translateY(1px); }
+
+    /* Botón secundario (si aparece) */
+    #api button#cancel,
+    #api .buttons button#cancel {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--border);
+      margin-top: 0.6rem;
+    }
+
+    /* Mensajes de error */
+    #api .error,
+    #api .itemLevel .error,
+    #api .pageLevel .error {
+      color: var(--destructive);
+      font-size: 0.82rem;
+      margin-top: 0.35rem;
+    }
+
+    #api .pageLevel {
+      background: rgba(179, 38, 30, 0.08);
+      border: 1px solid rgba(179, 38, 30, 0.25);
+      border-radius: calc(var(--radius) * 0.7);
+      padding: 0.7rem 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Separadores y proveedores sociales (si los hubiera) */
+    #api .divider {
+      margin: 1.25rem 0;
+      text-align: center;
+      color: var(--muted-foreground);
+      font-size: 0.8rem;
+    }
+
+    #api .create,
+    #api .createaccount {
+      margin-top: 1.25rem;
+      font-size: 0.88rem;
+      color: var(--muted-foreground);
+      text-align: center;
+    }
+    #api .create a { color: var(--primary); font-weight: 600; text-decoration: none; }
+    #api .create a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="amauta-shell">
+    <!-- Columna del formulario -->
+    <div class="amauta-form-side">
+      <div class="amauta-inner">
+        <svg class="amauta-logo" viewBox="0 0 1000 173.19" fill="currentColor" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Amauta">
+          <path d="M59.83,101.61l25.04-61.77,23.76,61.67c11.65.82,23.12,2.27,34.39,4.3L104.57,6.41h-22.82c-15.78,0-22.28,14.24-22.28,14.24L25.45,106.03c11.26-2.08,22.74-3.57,34.38-4.43" />
+          <path d="M330.04,59.54l-54.8,65.86h-6.02l-54.56-65.86v110.33h-33.65V6.41h17.17c14.45,0,25.05,14.23,25.05,14.23l49.11,58.6,49.13-58.6s12.14-14.23,26.98-14.23h15.25v163.46h-17.69c-16.44,0-15.97-16.45-15.97-16.45V59.54ZM584.58,98.73c0,25.95,13.22,42.55,40.38,42.55s41.11-17.54,41.11-42.81V6.41h33.67v94.47c0,38.46-25.96,71.65-74.78,71.65s-74.03-30.06-74.03-71.65V6.41h15.99c16.61,0,17.66,15.12,17.66,15.12v77.19ZM766.07,40.07v115.62s1.04,14.19,16.33,14.19h17.32V40.07h37.17c15.54,0,16.68-16.32,16.68-16.32V6.41h-123.28c-16.05,0-16.16,13.77-16.16,13.77v19.89h51.93Z" />
+          <path d="M147.35,117.04c-3.77-.76-7.6-1.34-11.42-1.94v-.1c-1.18-.2-2.38-.33-3.56-.51-1.42-.2-2.85-.43-4.29-.61-14.13-1.94-28.54-3.05-43.21-3.05-9.9,0-19.69.53-29.36,1.44v-.02c-.34.04-.67.09-1.03.13-4.6.43-9.17.98-13.73,1.62-1.42.2-2.86.37-4.27.59-.57.09-1.13.15-1.71.24v.05c-4.63.74-9.24,1.49-13.8,2.42L0,169.87h34.13l12.74-32.68c12.44-1.62,25.11-2.53,37.99-2.53s24.35.85,36.23,2.33l.06.2,7.07,18.49s5.92,14.19,19.97,14.19h19.61l-20.45-52.83Z" />
+          <path d="M435.76,101.61l25.04-61.77,23.76,61.67c11.65.82,23.12,2.27,34.4,4.3L480.5,6.41h-22.81c-15.78,0-22.28,14.24-22.28,14.24l-34.03,85.38c11.27-2.08,22.75-3.57,34.37-4.43" />
+          <path d="M523.29,117.04c-3.77-.76-7.59-1.34-11.42-1.94v-.1c-1.18-.2-2.37-.33-3.57-.51-1.42-.2-2.85-.43-4.27-.61-14.14-1.94-28.56-3.05-43.23-3.05-9.9,0-19.69.53-29.36,1.44l.02-.02c-.36.04-.7.09-1.05.13-4.6.43-9.18.98-13.73,1.62-1.42.2-2.84.37-4.26.59-.58.09-1.16.15-1.72.24v.05c-4.63.74-9.26,1.49-13.81,2.42l-20.96,52.58h34.14l12.73-32.68c12.45-1.62,25.1-2.53,37.99-2.53s24.35.85,36.23,2.33l.07.2,7.08,18.49s5.9,14.19,19.96,14.19h19.6l-20.44-52.83Z" />
+          <path d="M892.03,101.61l25.03-61.77,23.77,61.67c11.64.82,23.12,2.27,34.39,4.3l-38.44-99.39h-22.82c-15.78,0-22.27,14.24-22.27,14.24l-34.02,85.38c11.26-2.08,22.72-3.57,34.37-4.43" />
+          <path d="M979.56,117.04c-3.77-.76-7.6-1.34-11.42-1.94v-.1c-1.18-.2-2.38-.33-3.56-.51-1.42-.2-2.85-.43-4.29-.61-14.15-1.94-28.55-3.05-43.23-3.05-9.9,0-19.68.53-29.35,1.44v-.02c-.34.04-.68.09-1.03.13-4.6.43-9.19.98-13.73,1.62-1.43.2-2.84.37-4.27.59-.55.09-1.14.15-1.71.24v.05c-4.63.74-9.24,1.49-13.8,2.42l-20.96,52.58h34.13l12.73-32.68c12.44-1.62,25.11-2.53,37.98-2.53s24.36.85,36.24,2.33l.06.2,7.08,18.49s5.89,14.19,19.95,14.19h19.61l-20.44-52.83Z" />
+        </svg>
+
+        <h1 class="amauta-heading">Bienvenido de nuevo</h1>
+        <p class="amauta-sub">Ingresá con tu cuenta para acceder al Centro de Recursos.</p>
+
+        <!-- Azure AD B2C inyecta el formulario dentro de este contenedor -->
+        <div id="api"></div>
+      </div>
+    </div>
+
+    <!-- Columna de imagen -->
+    <div class="amauta-media-side" aria-hidden="true">
+      <div class="amauta-media-copy">
+        <p class="amauta-tagline">Evolucionando<strong>la agricultura</strong></p>
+        <p class="amauta-tagline-desc">Potenciamos los rindes a través de la nutrición vegetal, cuidando la salud del suelo.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
