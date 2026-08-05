@@ -3,7 +3,7 @@ import { SESSION_COOKIE, verifySession } from '@/lib/session-token'
 
 // Rutas públicas que no requieren sesión.
 const PUBLIC_PATHS = [
-  '/login', // redirige a B2C
+  '/login', // pantalla de ingreso (email/contraseña + botón B2C)
   '/auth/callback', // retorno de B2C
   '/acceso-interno', // respaldo transitorio: login legacy email/contraseña
   '/acceso-restringido', // rol insuficiente
@@ -41,8 +41,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.json({ error: 'No autenticado.' }, { status: 401 })
   }
 
-  // Resto: redirigir al flujo de Azure AD B2C.
-  return NextResponse.redirect(new URL('/api/auth/b2c/login', req.url))
+  // Resto: redirigir a nuestra pantalla de ingreso (email/contraseña + botón B2C).
+  const loginUrl = new URL('/login', req.url)
+  return NextResponse.redirect(loginUrl)
 }
 
 export const config = {
