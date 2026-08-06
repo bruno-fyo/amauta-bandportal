@@ -2,67 +2,64 @@ import 'server-only'
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose'
 
 // ---------------------------------------------------------------------------
-// Configuración centralizada de Azure AD B2C.
-// Toda la integración usa estas variables de entorno. No repetir URLs sueltas.
+// Configuración centralizada de Azure AD (Entra ID) corporativo.
+// El acceso de "colaborador Amauta" usa el tenant corporativo directo
+// (login.microsoftonline.com), no B2C. Client ID y Tenant ID no son secretos;
+// se pueden sobrescribir por env var, con el valor conocido como respaldo.
 // ---------------------------------------------------------------------------
-const LOGIN_DOMAIN = process.env.AZURE_B2C_LOGIN_DOMAIN
-const TENANT_DOMAIN = process.env.AZURE_B2C_TENANT_DOMAIN
-const POLICY = process.env.AZURE_B2C_POLICY
-const CLIENT_ID = process.env.AZURE_B2C_CLIENT_ID
-const REDIRECT_URI = process.env.AZURE_B2C_REDIRECT_URI
-const POST_LOGOUT_REDIRECT_URI = process.env.AZURE_B2C_POST_LOGOUT_REDIRECT_URI
-// Dominio (domain hint) del proveedor corporativo (Azure AD) registrado en la
-// política B2C. Con esto, B2C salta la pantalla intermedia de selección
-// ("Ingresá acá") y redirige directo al login corporativo de Microsoft.
-// Se lee de la variable de entorno; el valor fijo queda como respaldo por si
-// la variable no estuviera seteada. Tomado de Azure → Identity providers → Domain hint.
-const DOMAIN_HINT = process.env.AZURE_B2C_DOMAIN_HINT || 'intranet.fyo.com'
+const TENANT_ID =
+  process.env.AZURE_TENANT_ID || '9757942a-1dcd-45b3-ba22-2e5bdbc49b3c'
+const CLIENT_ID =
+  process.env.AZURE_CLIENT_ID || '2aabece9-b306-44e0-abbe-98004bc6ac96'
+// A dónde vuelve Microsoft con el id_token. Debe estar registrado como Redirect
+// URI en el App Registration (tipo SPA o Web, con "ID tokens" habilitado).
+const REDIRECT_URI =
+  process.env.AZURE_B2C_REDIRECT_URI || 'https://recursos.amauta.ag/auth/callback'
+const POST_LOGOUT_REDIRECT_URI =
+  process.env.AZURE_B2C_POST_LOGOUT_REDIRECT_URI ||
+  'https://recursos.amauta.ag/login'
 
-// ¿Está configurada la integración B2C? (permite degradar con elegancia).
+const AUTHORITY = `https://login.microsoftonline.com/${TENANT_ID}`
+
+// ¿Está configurado el acceso corporativo? (permite degradar con elegancia).
 export function b2cConfigured(): boolean {
-  return Boolean(LOGIN_DOMAIN && TENANT_DOMAIN && POLICY && CLIENT_ID && REDIRECT_URI)
+  return Boolean(TENANT_ID && CLIENT_ID && REDIRECT_URI)
 }
 
-function base(): string {
-  return `https://${LOGIN_DOMAIN}/${TENANT_DOMAIN}`
-}
-
-// URL de autorización (login) de B2C. Flujo implícito: response_type=id_token.
+// URL de autorización (login) de Entra ID. Flujo implícito: response_type=id_token.
 // El id_token vuelve en el fragmento '#' hacia REDIRECT_URI (/auth/callback).
 export function buildAuthorizeUrl(opts: { nonce: string; state: string }): string {
   const params = new URLSearchParams({
-    p: POLICY as string,
-    client_id: CLIENT_ID as string,
+    client_id: CLIENT_ID,
     nonce: opts.nonce,
     state: opts.state,
-    redirect_uri: REDIRECT_URI as string,
-    scope: 'openid',
+    redirect_uri: REDIRECT_URI,
+    scope: 'openid profile email',
     response_type: 'id_token',
-    prompt: 'login',
+    response_mode: 'fragment',
+    // Deja elegir/confirmar la cuenta corporativa (sin pantallas intermedias).
+    prompt: 'select_account',
   })
-  // Salta la pantalla intermedia de selección de proveedor y va directo al
-  // login corporativo de Microsoft cuando el dominio está configurado.
-  if (DOMAIN_HINT) params.set('domain_hint', DOMAIN_HINT)
-  return `${base()}/oauth2/v2.0/authorize?${params.toString()}`
+  return `${AUTHORITY}/oauth2/v2.0/authorize?${params.toString()}`
 }
 
-// URL de cierre de sesión de B2C.
+// URL de cierre de sesión de Entra ID.
 export function buildLogoutUrl(): string {
-  const params = new URLSearchParams({ p: POLICY as string })
+  const params = new URLSearchParams()
   if (POST_LOGOUT_REDIRECT_URI)
     params.set('post_logout_redirect_uri', POST_LOGOUT_REDIRECT_URI)
-  return `${base()}/oauth2/v2.0/logout?${params.toString()}`
+  return `${AUTHORITY}/oauth2/v2.0/logout?${params.toString()}`
 }
 
 // ---------------------------------------------------------------------------
-// Descubrimiento OIDC: obtenemos issuer y jwks_uri reales del tenant/política
-// en lugar de hardcodearlos (el issuer incluye el GUID del tenant).
+// Descubrimiento OIDC: obtenemos issuer y jwks_uri reales del tenant en lugar
+// de hardcodearlos (el issuer incluye el GUID del tenant).
 // ---------------------------------------------------------------------------
 let discoveryCache: { issuer: string; jwksUri: string } | null = null
 
 async function getDiscovery(): Promise<{ issuer: string; jwksUri: string }> {
   if (discoveryCache) return discoveryCache
-  const url = `${base()}/v2.0/.well-known/openid-configuration?p=${POLICY}`
+  const url = `${AUTHORITY}/v2.0/.well-known/openid-configuration`
   const res = await fetch(url, { cache: 'no-store' })
   if (!res.ok)
     throw new Error(`[b2c] No se pudo obtener el discovery document (${res.status})`)
@@ -96,15 +93,17 @@ export type B2CClaims = JWTPayload & {
   oid?: string
   emails?: string[]
   email?: string
+  preferred_username?: string
+  upn?: string
   name?: string
   given_name?: string
   family_name?: string
+  tid?: string
   idp?: string
-  tfp?: string
-  acr?: string
 }
 
 // Extrae identidad estable, email y nombre desde los claims.
+// En Entra ID corporativo el email suele venir en `preferred_username` o `upn`.
 export function extractIdentity(payload: B2CClaims): {
   b2cId: string
   email: string
@@ -112,7 +111,10 @@ export function extractIdentity(payload: B2CClaims): {
 } {
   const b2cId = String(payload.oid ?? payload.sub ?? '')
   const rawEmail =
-    (Array.isArray(payload.emails) ? payload.emails[0] : payload.email) ?? ''
+    (Array.isArray(payload.emails) ? payload.emails[0] : payload.email) ??
+    payload.preferred_username ??
+    payload.upn ??
+    ''
   const email = rawEmail.toLowerCase()
   const composed = [payload.given_name, payload.family_name]
     .filter(Boolean)
@@ -121,14 +123,9 @@ export function extractIdentity(payload: B2CClaims): {
   return { b2cId, email, name }
 }
 
-// Regla centralizada y ajustable para reconocer colaboradores de Amauta.
-// Por defecto: si el token trae un claim `idp` (proveedor federado / acceso
-// corporativo), es colaborador. Las cuentas locales de clientes (email +
-// contraseña) NO incluyen `idp`. Se puede fijar el valor exacto esperado con
-// la variable AZURE_B2C_COLABORADOR_IDP una vez confirmado con el primer login.
-export function isColaborador(payload: B2CClaims): boolean {
-  const expectedIdp = process.env.AZURE_B2C_COLABORADOR_IDP
-  const idp = typeof payload.idp === 'string' ? payload.idp : undefined
-  if (expectedIdp) return idp === expectedIdp
-  return Boolean(idp)
+// Con Entra ID directo, todo el que se autentica lo hace con una cuenta del
+// tenant corporativo de Amauta: por lo tanto es colaborador. Los clientes usan
+// el formulario propio (email + contraseña), no este flujo.
+export function isColaborador(_payload: B2CClaims): boolean {
+  return true
 }
