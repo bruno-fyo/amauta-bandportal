@@ -11,10 +11,11 @@ const TENANT_ID =
   process.env.AZURE_TENANT_ID || '9757942a-1dcd-45b3-ba22-2e5bdbc49b3c'
 const CLIENT_ID =
   process.env.AZURE_CLIENT_ID || '2aabece9-b306-44e0-abbe-98004bc6ac96'
-// A dónde vuelve Microsoft con el id_token. Debe estar registrado como Redirect
-// URI en el App Registration (tipo SPA o Web, con "ID tokens" habilitado).
-const REDIRECT_URI =
-  process.env.AZURE_B2C_REDIRECT_URI || 'https://recursos.amauta.ag/auth/callback'
+// A dónde vuelve Microsoft con el code. Debe coincidir EXACTAMENTE con la
+// Redirect URI registrada en el App Registration (plataforma SPA). En Azure
+// está registrada como /auth/v1/callback, así que fijamos ese path acá y no
+// dependemos de la variable de entorno (que tenía el path viejo /auth/callback).
+const REDIRECT_URI = 'https://recursos.amauta.ag/auth/v1/callback'
 const POST_LOGOUT_REDIRECT_URI =
   process.env.AZURE_B2C_POST_LOGOUT_REDIRECT_URI ||
   'https://recursos.amauta.ag/login'
