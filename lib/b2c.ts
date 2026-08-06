@@ -16,9 +16,6 @@ const CLIENT_ID =
 // está registrada como /auth/v1/callback, así que fijamos ese path acá y no
 // dependemos de la variable de entorno (que tenía el path viejo /auth/callback).
 const REDIRECT_URI = 'https://recursos.amauta.ag/auth/v1/callback'
-const POST_LOGOUT_REDIRECT_URI =
-  process.env.AZURE_B2C_POST_LOGOUT_REDIRECT_URI ||
-  'https://recursos.amauta.ag/login'
 
 const AUTHORITY = `https://login.microsoftonline.com/${TENANT_ID}`
 const SCOPE = 'openid profile email'
@@ -47,14 +44,6 @@ export function getAuthPublicConfig(): AuthPublicConfig {
     redirectUri: REDIRECT_URI,
     scope: SCOPE,
   }
-}
-
-// URL de cierre de sesión de Entra ID.
-export function buildLogoutUrl(): string {
-  const params = new URLSearchParams()
-  if (POST_LOGOUT_REDIRECT_URI)
-    params.set('post_logout_redirect_uri', POST_LOGOUT_REDIRECT_URI)
-  return `${AUTHORITY}/oauth2/v2.0/logout?${params.toString()}`
 }
 
 // ---------------------------------------------------------------------------

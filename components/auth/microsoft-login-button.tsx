@@ -60,11 +60,13 @@ export function MicrosoftLoginButton({ config }: { config: AuthPublicConfig }) {
         <Loader2 className="size-4 animate-spin" aria-hidden="true" />
       ) : (
         <>
-          <svg viewBox="0 0 21 21" className="size-4" aria-hidden="true">
-            <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-            <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-            <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-            <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+          <svg
+            viewBox="0 0 687.6 599.05"
+            className="size-4"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M201.09,573.15l146.43-361.29,138.98,360.71c68.07,4.78,135.17,13.26,201.11,25.15L462.76,16.4h-133.44c-92.33,0-130.3,83.28-130.3,83.28L0,599.05c65.89-12.19,132.96-20.86,201.09-25.9" />
           </svg>
           Ingresar como colaborador Amauta
         </>
