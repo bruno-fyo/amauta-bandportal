@@ -20,27 +20,32 @@ const POST_LOGOUT_REDIRECT_URI =
   'https://recursos.amauta.ag/login'
 
 const AUTHORITY = `https://login.microsoftonline.com/${TENANT_ID}`
+const SCOPE = 'openid profile email'
 
 // ¿Está configurado el acceso corporativo? (permite degradar con elegancia).
 export function b2cConfigured(): boolean {
   return Boolean(TENANT_ID && CLIENT_ID && REDIRECT_URI)
 }
 
-// URL de autorización (login) de Entra ID. Flujo implícito: response_type=id_token.
-// El id_token vuelve en el fragmento '#' hacia REDIRECT_URI (/auth/callback).
-export function buildAuthorizeUrl(opts: { nonce: string; state: string }): string {
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    nonce: opts.nonce,
-    state: opts.state,
-    redirect_uri: REDIRECT_URI,
-    scope: 'openid profile email',
-    response_type: 'id_token',
-    response_mode: 'fragment',
-    // Deja elegir/confirmar la cuenta corporativa (sin pantallas intermedias).
-    prompt: 'select_account',
-  })
-  return `${AUTHORITY}/oauth2/v2.0/authorize?${params.toString()}`
+// Configuración PÚBLICA (no secreta) que el navegador necesita para iniciar el
+// flujo authorization code + PKCE e intercambiar el code por el id_token.
+// Se pasa como props desde componentes de servidor a los componentes cliente.
+export type AuthPublicConfig = {
+  authorizeEndpoint: string
+  tokenEndpoint: string
+  clientId: string
+  redirectUri: string
+  scope: string
+}
+
+export function getAuthPublicConfig(): AuthPublicConfig {
+  return {
+    authorizeEndpoint: `${AUTHORITY}/oauth2/v2.0/authorize`,
+    tokenEndpoint: `${AUTHORITY}/oauth2/v2.0/token`,
+    clientId: CLIENT_ID,
+    redirectUri: REDIRECT_URI,
+    scope: SCOPE,
+  }
 }
 
 // URL de cierre de sesión de Entra ID.

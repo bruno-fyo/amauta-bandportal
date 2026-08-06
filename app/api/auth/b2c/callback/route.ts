@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { user, type Role } from '@/lib/db/schema'
@@ -15,8 +14,8 @@ import { setSessionCookie } from '@/lib/b2c-session'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Recibe el id_token (extraído del fragmento por el cliente), lo valida contra
-// las claves públicas del tenant, resuelve el usuario en Neon y crea la sesión.
+// Recibe el id_token (canjeado por el cliente vía PKCE), lo valida contra las
+// claves públicas del tenant, resuelve el usuario en Neon y crea la sesión.
 export async function POST(request: Request) {
   if (!b2cConfigured()) {
     return NextResponse.json(
@@ -25,44 +24,33 @@ export async function POST(request: Request) {
     )
   }
 
-  let body: { idToken?: string; state?: string }
+  let body: { idToken?: string; nonce?: string }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Solicitud inválida.' }, { status: 400 })
   }
 
-  const { idToken, state } = body
-  if (!idToken) {
-    return NextResponse.json({ error: 'Falta el token de acceso.' }, { status: 400 })
-  }
-
-  const store = await cookies()
-  const expectedState = store.get('b2c_state')?.value
-  const expectedNonce = store.get('b2c_nonce')?.value
-
-  if (!expectedState || !expectedNonce) {
+  const { idToken, nonce } = body
+  if (!idToken || !nonce) {
     return NextResponse.json(
       { error: 'La sesión de inicio expiró. Volvé a intentar.' },
       { status: 400 },
     )
   }
-  if (state !== expectedState) {
-    return NextResponse.json({ error: 'Parámetro state inválido.' }, { status: 400 })
-  }
 
   // Validación completa del token en el servidor (firma, issuer, audience, exp, nonce).
   let payload: B2CClaims
   try {
-    payload = (await verifyIdToken(idToken, expectedNonce)) as B2CClaims
+    payload = (await verifyIdToken(idToken, nonce)) as B2CClaims
   } catch (err) {
     console.error('[v0] b2c verifyIdToken error:', err)
     return NextResponse.json({ error: 'El token no es válido.' }, { status: 401 })
   }
 
-  // Log temporal de claims: sirve para confirmar qué claim distingue a un
-  // colaborador (idp) durante los primeros logins reales. Quitar luego.
-  console.log('[v0] b2c claims recibidos:', JSON.stringify(payload))
+  // Log temporal de claims: sirve para confirmar cómo llega el email/nombre
+  // durante los primeros logins reales. Quitar luego.
+  console.log('[v0] entra claims recibidos:', JSON.stringify(payload))
 
   const { b2cId, email, name } = extractIdentity(payload)
   if (!b2cId || !email) {
@@ -119,10 +107,6 @@ export async function POST(request: Request) {
 
   // Crear la sesión propia del Centro de Recursos.
   await setSessionCookie({ userId, b2cId })
-
-  // Limpiar cookies temporales del flujo.
-  store.delete('b2c_nonce')
-  store.delete('b2c_state')
 
   return NextResponse.json({ ok: true, redirect: '/' })
 }

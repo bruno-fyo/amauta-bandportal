@@ -3,17 +3,17 @@ import { redirect } from 'next/navigation'
 import { AmautaWordmark } from '@/components/brand/logo'
 import { LoginForm } from '@/components/auth/login-form'
 import { getCurrentUser } from '@/lib/session'
-import { b2cConfigured } from '@/lib/b2c'
+import { b2cConfigured, getAuthPublicConfig } from '@/lib/b2c'
 
 // Ingreso principal del portal.
 // - Muestra nuestra pantalla con email + contraseña (Better Auth).
-// - Si el acceso corporativo (B2C/Entra) está configurado, agrega el botón
-//   "Ingresar como colaborador Amauta" que inicia ese flujo.
+// - Si el acceso corporativo (Entra ID) está configurado, agrega el botón
+//   "Ingresar como colaborador Amauta" (flujo authorization code + PKCE).
 export default async function LoginPage() {
   const user = await getCurrentUser()
   if (user) redirect('/')
 
-  const showMicrosoft = b2cConfigured()
+  const microsoftConfig = b2cConfigured() ? getAuthPublicConfig() : null
 
   return (
     <main className="flex h-dvh overflow-hidden bg-background">
@@ -31,7 +31,7 @@ export default async function LoginPage() {
             </p>
           </div>
 
-          <LoginForm showMicrosoft={showMicrosoft} />
+          <LoginForm microsoftConfig={microsoftConfig} />
         </div>
       </div>
 
