@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { LogOut, LifeBuoy, ShieldCheck } from 'lucide-react'
 import { AmautaWordmark } from '@/components/brand/logo'
 import { authClient } from '@/lib/auth-client'
@@ -11,13 +11,18 @@ import { cn } from '@/lib/utils'
 
 export function Sidebar({ role }: { role: Role }) {
   const pathname = usePathname()
-  const router = useRouter()
   const items = navItemsForRole(role)
 
   async function handleSignOut() {
-    await authClient.signOut()
-    router.push('/login')
-    router.refresh()
+    // Cierra la sesión legacy de Better Auth (si existiera) y luego pasa por la
+    // ruta de logout de B2C, que borra la cookie propia (amauta_session) y
+    // cierra sesión en el proveedor antes de volver al ingreso.
+    try {
+      await authClient.signOut()
+    } catch {
+      // Puede no haber sesión de Better Auth (usuario de B2C): ignorar.
+    }
+    window.location.href = '/api/auth/b2c/logout'
   }
 
   return (
