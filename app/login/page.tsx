@@ -6,14 +6,16 @@ import { getCurrentUser } from '@/lib/session'
 import { b2cConfigured } from '@/lib/b2c'
 
 // Ingreso principal del portal.
-// - Muestra la pantalla de Amauta con email + contraseña (Better Auth).
-// - Si Azure AD B2C está configurado, agrega el botón "Ingresar como
-//   colaborador Amauta" que inicia el flujo B2C.
+// - Azure AD B2C es el ingreso único: si está configurado, se redirige directo
+//   a la pantalla de B2C (que replica la identidad de Amauta).
+// - Si B2C no estuviera configurado, se muestra la pantalla propia con email +
+//   contraseña como respaldo, para que la app nunca quede sin login.
 export default async function LoginPage() {
   const user = await getCurrentUser()
   if (user) redirect('/')
 
-  const showMicrosoft = b2cConfigured()
+  // B2C como ingreso único.
+  if (b2cConfigured()) redirect('/api/auth/b2c/login')
 
   return (
     <main className="flex h-dvh overflow-hidden bg-background">
@@ -31,7 +33,7 @@ export default async function LoginPage() {
             </p>
           </div>
 
-          <LoginForm showMicrosoft={showMicrosoft} />
+          <LoginForm />
         </div>
       </div>
 
