@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { MicrosoftLoginButton } from '@/components/auth/microsoft-login-button'
+import { PasswordRecovery } from '@/components/auth/password-recovery'
 import type { AuthPublicConfig } from '@/lib/b2c'
 
 export function LoginForm({
@@ -13,10 +14,18 @@ export function LoginForm({
   microsoftConfig?: AuthPublicConfig | null
 }) {
   const router = useRouter()
+  const [mode, setMode] = useState<'login' | 'recover'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Flujo de recuperación de contraseña (solo cuentas locales).
+  if (mode === 'recover') {
+    return (
+      <PasswordRecovery defaultEmail={email} onBackToLogin={() => setMode('login')} />
+    )
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -41,6 +50,15 @@ export function LoginForm({
 
   return (
     <div>
+      <div className="mt-10">
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+          Ingresá a tu cuenta
+        </h1>
+        <p className="mt-2 text-pretty text-muted-foreground">
+          Accedé al Centro de Recursos con tu correo y contraseña.
+        </p>
+      </div>
+
       {error && (
         <div
           role="alert"
@@ -87,6 +105,15 @@ export function LoginForm({
               className="h-12 w-full rounded-xl border border-border bg-card pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/15"
               placeholder="Tu contraseña"
             />
+          </div>
+          <div className="mt-1.5 text-right">
+            <button
+              type="button"
+              onClick={() => setMode('recover')}
+              className="text-sm font-semibold text-primary transition-opacity hover:opacity-80"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
           </div>
         </div>
 
