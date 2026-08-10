@@ -74,7 +74,13 @@ export const auth = betterAuth({
         // Únicamente cuentas locales: bloquea Microsoft-only e inexistentes.
         // (Respuesta genérica al cliente: nunca se revela si el email existe.)
         if (!(await emailHasLocalCredential(email))) return
-        await sendPasswordResetEmail(email, otp)
+        try {
+          await sendPasswordResetEmail(email, otp)
+        } catch {
+          // El fallo ya quedó registrado (log genérico, sin datos sensibles) en
+          // sendPasswordResetEmail. No re-lanzamos para mantener la respuesta
+          // anti-enumeración: el usuario siempre ve el mismo mensaje genérico.
+        }
       },
     }),
   ],

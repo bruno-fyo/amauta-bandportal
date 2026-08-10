@@ -1,36 +1,144 @@
 import 'server-only'
 
 // ---------------------------------------------------------------------------
-// Envío de emails transaccionales vía Resend (API REST, sin dependencia extra).
-// Variables de entorno necesarias:
-//   - RESEND_API_KEY   (obligatoria para enviar en producción)
-//   - AUTH_EMAIL_FROM  (remitente verificado, ej. "Amauta <no-reply@amauta.ag>")
-// Si faltan: en desarrollo se loguea el código para poder probar; en producción
-// se lanza un error (nunca se simula un envío exitoso).
+// Envío de emails transaccionales vía Microsoft Graph (Microsoft 365).
+//
+// Flujo (100% del lado del servidor):
+//   1. OAuth 2.0 Client Credentials contra el tenant corporativo de M365 para
+//      obtener un access token (scope https://graph.microsoft.com/.default).
+//   2. POST /users/{senderMailbox}/sendMail  ->  202 Accepted = enviado.
+//
+// Variables de entorno (tenant CORPORATIVO de Microsoft 365, NO el de B2C):
+//   - MICROSOFT_GRAPH_TENANT_ID
+//   - MICROSOFT_GRAPH_CLIENT_ID
+//   - MICROSOFT_GRAPH_CLIENT_SECRET
+//   - MICROSOFT_GRAPH_SENDER_EMAIL   (casilla remitente, ej. no-reply@amauta.ag)
+//
+// Seguridad:
+//   - Nunca se exponen tenant/client/secret/token/OTP al cliente.
+//   - En logs de producción no se registran secretos, tokens, OTP ni el email
+//     completo (se enmascara). El OTP solo se loguea en desarrollo local.
+//   - No se simula un envío exitoso en producción: si faltan variables o Graph
+//     falla, se lanza un error (que el llamador captura y convierte en un log
+//     genérico, preservando la respuesta anti-enumeración hacia el usuario).
 // ---------------------------------------------------------------------------
-
-const RESEND_ENDPOINT = 'https://api.resend.com/emails'
 
 function isProd() {
   return process.env.NODE_ENV === 'production'
 }
 
+// Enmascara un email para logs: "marketing@amauta.ag" -> "m***@amauta.ag".
+function maskEmail(email: string): string {
+  const [local, domain] = email.split('@')
+  if (!domain) return '***'
+  const head = local.slice(0, 1)
+  return `${head}***@${domain}`
+}
+
+type GraphConfig = {
+  tenantId: string
+  clientId: string
+  clientSecret: string
+  sender: string
+}
+
+// Lee y valida la configuración de Graph. Devuelve null si falta alguna
+// variable (el llamador decide cómo degradar según el entorno).
+function readGraphConfig(): { config: GraphConfig | null; missing: string[] } {
+  const tenantId = process.env.MICROSOFT_GRAPH_TENANT_ID
+  const clientId = process.env.MICROSOFT_GRAPH_CLIENT_ID
+  const clientSecret = process.env.MICROSOFT_GRAPH_CLIENT_SECRET
+  const sender = process.env.MICROSOFT_GRAPH_SENDER_EMAIL
+
+  const missing = [
+    !tenantId && 'MICROSOFT_GRAPH_TENANT_ID',
+    !clientId && 'MICROSOFT_GRAPH_CLIENT_ID',
+    !clientSecret && 'MICROSOFT_GRAPH_CLIENT_SECRET',
+    !sender && 'MICROSOFT_GRAPH_SENDER_EMAIL',
+  ].filter(Boolean) as string[]
+
+  if (missing.length) return { config: null, missing }
+  return {
+    config: {
+      tenantId: tenantId as string,
+      clientId: clientId as string,
+      clientSecret: clientSecret as string,
+      sender: sender as string,
+    },
+    missing: [],
+  }
+}
+
+// -------------------------- Caché de token en memoria -----------------------
+// Se reutiliza el access token mientras siga vigente. No se persiste en base de
+// datos ni fuera del proceso. En serverless puede recrearse por invocación, lo
+// cual es seguro (solo implica pedir un token nuevo a Graph).
+let tokenCache: { token: string; expiresAt: number } | null = null
+
+// Solo para pruebas: limpia el token cacheado. No expone ningún secreto.
+export function resetGraphTokenCache(): void {
+  tokenCache = null
+}
+
+async function getAccessToken(config: GraphConfig): Promise<string> {
+  const now = Date.now()
+  // Margen de 60s para no usar un token a punto de expirar.
+  if (tokenCache && tokenCache.expiresAt - 60_000 > now) {
+    return tokenCache.token
+  }
+
+  const url = `https://login.microsoftonline.com/${config.tenantId}/oauth2/v2.0/token`
+  const body = new URLSearchParams({
+    client_id: config.clientId,
+    client_secret: config.clientSecret,
+    scope: 'https://graph.microsoft.com/.default',
+    grant_type: 'client_credentials',
+  })
+
+  let res: Response
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    })
+  } catch {
+    // No incluir detalles de red que pudieran filtrar configuración.
+    throw new Error('graph_token_network_error')
+  }
+
+  if (!res.ok) {
+    // El cuerpo puede contener client_id/descripciones: NO lo incluimos en el
+    // error propagado. Solo el status, que es seguro.
+    throw new Error(`graph_token_error_${res.status}`)
+  }
+
+  const json = (await res.json().catch(() => null)) as
+    | { access_token?: string; expires_in?: number }
+    | null
+
+  if (!json?.access_token) {
+    throw new Error('graph_token_missing_access_token')
+  }
+
+  const expiresInMs = (json.expires_in ?? 3600) * 1000
+  tokenCache = { token: json.access_token, expiresAt: now + expiresInMs }
+  return json.access_token
+}
+
 type SendArgs = { to: string; subject: string; html: string; text: string }
 
 async function sendEmail({ to, subject, html, text }: SendArgs): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.AUTH_EMAIL_FROM
+  const { config, missing } = readGraphConfig()
 
-  if (!apiKey || !from) {
-    const faltan = [!apiKey && 'RESEND_API_KEY', !from && 'AUTH_EMAIL_FROM']
-      .filter(Boolean)
-      .join(', ')
+  if (!config) {
+    const faltan = missing.join(', ')
     if (isProd()) {
-      // No simular envío en producción: fallar de forma explícita (queda en logs
-      // del servidor, nunca llega al cliente por el flujo anti-enumeración).
-      throw new Error(`No se puede enviar el email: faltan variables ${faltan}.`)
+      // No simular envío en producción: fallar de forma explícita.
+      throw new Error(`graph_config_missing:${faltan}`)
     }
-    // Desarrollo: permitir probar el flujo sin proveedor configurado.
+    // Desarrollo: permitir probar el flujo sin credenciales configuradas.
+    // (El OTP va dentro de `text`; esto solo ocurre en entorno local.)
     console.log(
       `[v0] Email no enviado (faltan ${faltan}). Contenido para pruebas locales:\n` +
         `  Para: ${to}\n  Asunto: ${subject}\n  ${text.replace(/\n/g, '\n  ')}`,
@@ -38,18 +146,39 @@ async function sendEmail({ to, subject, html, text }: SendArgs): Promise<void> {
     return
   }
 
-  const res = await fetch(RESEND_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from, to, subject, html, text }),
-  })
+  const token = await getAccessToken(config)
 
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(`Resend respondió ${res.status}: ${detail.slice(0, 300)}`)
+  const endpoint = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(
+    config.sender,
+  )}/sendMail`
+
+  const payload = {
+    message: {
+      subject,
+      body: { contentType: 'HTML', content: html },
+      toRecipients: [{ emailAddress: { address: to } }],
+    },
+    saveToSentItems: false,
+  }
+
+  let res: Response
+  try {
+    res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    throw new Error('graph_sendmail_network_error')
+  }
+
+  // Graph responde 202 Accepted cuando el mensaje se encoló correctamente.
+  if (res.status !== 202) {
+    // No incluir el cuerpo (podría traer datos de la casilla o del destinatario).
+    throw new Error(`graph_sendmail_error_${res.status}`)
   }
 }
 
@@ -90,5 +219,16 @@ export async function sendPasswordResetEmail(to: string, otp: string): Promise<v
     </div>
   </div>`
 
-  await sendEmail({ to, subject, html, text })
+  try {
+    await sendEmail({ to, subject, html, text })
+  } catch (err) {
+    // Log genérico y seguro: nunca incluir OTP, token, secretos ni el email
+    // completo. Se relanza para que el llamador decida (manteniendo la
+    // respuesta anti-enumeración hacia el usuario final).
+    const code = err instanceof Error ? err.message.split(':')[0] : 'graph_unknown_error'
+    console.error(
+      `[v0] Falló el envío del email de recuperación (${code}) para ${maskEmail(to)}`,
+    )
+    throw err
+  }
 }
