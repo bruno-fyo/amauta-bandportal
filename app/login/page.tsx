@@ -22,15 +22,6 @@ export default async function LoginPage() {
         <div className="mx-auto w-full max-w-md">
           <AmautaWordmark className="h-8 w-auto text-primary" />
 
-          <div className="mt-10">
-            <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-              Ingresá a tu cuenta
-            </h1>
-            <p className="mt-2 text-pretty text-muted-foreground">
-              Accedé al Centro de Recursos con tu correo y contraseña.
-            </p>
-          </div>
-
           <LoginForm microsoftConfig={microsoftConfig} />
         </div>
       </div>
