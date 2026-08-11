@@ -106,11 +106,11 @@ export function LoginForm({
               placeholder="Tu contraseña"
             />
           </div>
-          <div className="mt-1.5 text-right">
+          <div className="mt-1.5">
             <button
               type="button"
               onClick={() => setMode('recover')}
-              className="text-sm font-semibold text-primary transition-opacity hover:opacity-80"
+              className="inline-block w-fit text-xs font-semibold text-primary transition-opacity hover:opacity-80"
             >
               ¿Olvidaste tu contraseña?
             </button>
