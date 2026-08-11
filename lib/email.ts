@@ -4,9 +4,9 @@ import 'server-only'
 // Envío del OTP de recuperación de contraseña vía webhook seguro de n8n.
 //
 // Flujo (100% del lado del servidor):
-//   POST JSON a N8N_PASSWORD_RESET_WEBHOOK_URL con header
-//   Authorization: Bearer <N8N_PASSWORD_RESET_WEBHOOK_SECRET>.
-//   n8n se encarga del envío real del correo. Solo 2xx = éxito.
+//   POST JSON { email, code } a N8N_PASSWORD_RESET_WEBHOOK_URL con header
+//   x-amauta-secret: <N8N_PASSWORD_RESET_WEBHOOK_SECRET>.
+//   n8n envía el correo por Microsoft Outlook. Solo 2xx = éxito.
 //
 // Variables de entorno:
 //   - N8N_PASSWORD_RESET_WEBHOOK_URL     (endpoint del webhook)
@@ -76,12 +76,7 @@ export async function sendPasswordResetOTP(email: string, otp: string): Promise<
   }
 
   // Cuerpo EXACTO que espera n8n. No se agregan campos extra.
-  const body = {
-    email,
-    otp,
-    purpose: 'password-reset',
-    app: 'amauta-recursos',
-  }
+  const body = { email, code: otp }
 
   // Timeout de 10s con AbortController.
   const controller = new AbortController()
@@ -93,7 +88,7 @@ export async function sendPasswordResetOTP(email: string, otp: string): Promise<
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.secret}`,
+        'x-amauta-secret': config.secret,
       },
       body: JSON.stringify(body),
       signal: controller.signal,
