@@ -139,13 +139,13 @@ function ProductCard({
     <article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
       <div className="relative aspect-square w-full overflow-hidden">
         {showImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            ref={handleRef}
+          <Image
             src={product.imageUrl as string}
             alt={product.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onError={() => setImgError(true)}
-            className="absolute inset-0 h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-105"
+            className="object-contain p-3 transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div

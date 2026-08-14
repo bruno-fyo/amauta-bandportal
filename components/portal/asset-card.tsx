@@ -1,5 +1,6 @@
 import { Download, Calendar, FileText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { ExpandableText } from '@/components/portal/expandable-text'
 import { CATEGORY_LABELS, type CategoryKey } from '@/lib/categories'
 import type { Asset } from '@/lib/db/schema'
 
@@ -41,9 +42,7 @@ export function AssetCard({ asset }: { asset: Asset }) {
             {asset.title}
           </h3>
           {asset.description ? (
-            <p className="line-clamp-2 text-pretty text-sm text-muted-foreground">
-              {asset.description}
-            </p>
+            <ExpandableText text={asset.description} />
           ) : null}
         </div>
 

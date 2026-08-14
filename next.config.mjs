@@ -4,7 +4,12 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    // Optimización activada: Next redimensiona y convierte a WebP/AVIF bajo
+    // demanda. Las miniaturas de productos viven en Vercel Blob, así que hay
+    // que permitir ese origen remoto.
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
+    ],
   },
   async headers() {
     return [
