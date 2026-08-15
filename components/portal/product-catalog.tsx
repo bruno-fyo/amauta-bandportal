@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { ChevronDown, Download, ImageIcon, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Flag } from '@/components/portal/flag'
@@ -126,14 +127,6 @@ function ProductCard({
 }) {
   const [imgError, setImgError] = useState(false)
   const showImage = !!product.imageUrl && !imgError
-
-  // La imagen puede fallar antes de que React hidrate y "pierda" el onError.
-  // Con un ref detectamos las imágenes que ya fallaron al montar el componente.
-  const handleRef = (node: HTMLImageElement | null) => {
-    if (node && node.complete && node.naturalWidth === 0) {
-      setImgError(true)
-    }
-  }
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
