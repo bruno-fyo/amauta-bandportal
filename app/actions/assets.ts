@@ -100,6 +100,83 @@ export async function saveAssetRecord(input: NewAssetInput): Promise<ActionResul
   }
 }
 
+// Datos de edición de un asset. Los campos de archivo son opcionales: solo
+// vienen cuando el admin resubió un archivo nuevo (ya cargado al Blob).
+export type UpdateAssetInput = {
+  id: number
+  title: string
+  description?: string
+  category: string
+  fileType: string
+  tags: string[]
+  visibility: Role[]
+  // Presentes solo si se reemplazó el archivo.
+  fileName?: string
+  filePathname?: string
+  fileUrl?: string
+  fileSize?: number
+}
+
+// Actualiza los metadatos de un asset y, opcionalmente, reemplaza el archivo.
+// Si llega un archivo nuevo, se borra el anterior del Blob. Solo admin.
+export async function updateAsset(input: UpdateAssetInput): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+
+    const title = input.title.trim()
+    const category = input.category.trim()
+    const fileType = input.fileType.trim()
+    const visibility = input.visibility
+
+    if (!title) return { ok: false, error: 'El título es obligatorio.' }
+    if (!category) return { ok: false, error: 'Seleccioná una categoría.' }
+    if (!fileType) return { ok: false, error: 'Seleccioná el tipo de archivo.' }
+    if (visibility.length === 0)
+      return { ok: false, error: 'Seleccioná al menos un rol con visibilidad.' }
+
+    const [row] = await db.select().from(assets).where(eq(assets.id, input.id))
+    if (!row) return { ok: false, error: 'El material ya no existe.' }
+
+    // ¿Se resubió un archivo? Se detecta por la presencia de una URL nueva.
+    const hasNewFile = Boolean(input.fileUrl && input.filePathname)
+
+    const values: Partial<typeof assets.$inferInsert> = {
+      title,
+      description: input.description?.trim() || null,
+      category,
+      fileType,
+      tags: input.tags,
+      visibility,
+      updatedAt: new Date(),
+    }
+
+    if (hasNewFile) {
+      values.fileName = input.fileName
+      values.filePathname = input.filePathname
+      values.fileUrl = input.fileUrl
+      values.fileSize = input.fileSize
+    }
+
+    await db.update(assets).set(values).where(eq(assets.id, input.id))
+
+    // Borrar el archivo anterior del Blob recién ahora que la BD ya apunta al nuevo.
+    if (hasNewFile && row.fileUrl && row.fileUrl !== input.fileUrl) {
+      try {
+        await del(row.fileUrl)
+      } catch (e) {
+        console.error('[v0] blob del (update) error:', e)
+      }
+    }
+
+    revalidatePath('/admin')
+    revalidatePath('/')
+    return { ok: true }
+  } catch (err) {
+    console.error('[v0] updateAsset error:', err)
+    return { ok: false, error: 'No se pudo actualizar el material. Intentá de nuevo.' }
+  }
+}
+
 // Eliminar un asset y su archivo en Blob. Solo admin.
 export async function deleteAsset(id: number): Promise<ActionResult> {
   try {

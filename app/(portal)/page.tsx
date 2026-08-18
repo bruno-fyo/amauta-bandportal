@@ -132,8 +132,6 @@ export default async function DashboardPage() {
         <SectionHeading
           title="Actualizados Recientemente"
           description="Las últimas piezas cargadas al centro de recursos, según tu acceso."
-          actionLabel="Ver recursos"
-          actionHref="/recursos"
         />
         <Suspense fallback={<AssetGridSkeleton count={8} />}>
           <RecentAssets />

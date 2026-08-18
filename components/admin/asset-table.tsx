@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Loader2, FileText, Eye, Inbox } from 'lucide-react'
+import { Trash2, Loader2, FileText, Eye, Inbox, Pencil } from 'lucide-react'
 import { deleteAsset } from '@/app/actions/assets'
+import { AssetEditModal } from '@/components/admin/asset-edit-modal'
 import { CATEGORY_LABELS, type CategoryKey } from '@/lib/categories'
 import { ROLE_LABELS, type Asset, type Role } from '@/lib/db/schema'
 
@@ -18,6 +19,7 @@ function formatSize(bytes: number | null) {
 export function AssetTable({ assets }: { assets: Asset[] }) {
   const router = useRouter()
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   async function handleDelete(id: number, title: string) {
@@ -122,6 +124,14 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
                     )}
                     <button
                       type="button"
+                      onClick={() => setEditingAsset(asset)}
+                      className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      aria-label={`Editar ${asset.title}`}
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleDelete(asset.id, asset.title)}
                       disabled={deletingId === asset.id}
                       className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
@@ -140,6 +150,10 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
           </tbody>
         </table>
       </div>
+
+      {editingAsset && (
+        <AssetEditModal asset={editingAsset} onClose={() => setEditingAsset(null)} />
+      )}
     </div>
   )
 }
