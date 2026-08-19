@@ -17,10 +17,25 @@ function getInitials(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-export function Header({ user }: { user: SessionUser }) {
+export function Header({
+  user,
+  lastUpload,
+}: {
+  user: SessionUser
+  lastUpload: string | null
+}) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+
+  // Fecha de la última carga de archivos, formateada como "20 jun 2026".
+  const lastUploadLabel = lastUpload
+    ? new Date(lastUpload).toLocaleDateString('es-AR', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : null
 
   async function handleSignOut() {
     // Cierra la sesión legacy de Better Auth (si existiera) y luego pasa por la
@@ -65,12 +80,14 @@ export function Header({ user }: { user: SessionUser }) {
 
         <div className="ml-auto flex items-center gap-2 md:gap-3">
           {/* Last update */}
-          <div className="hidden items-center gap-2 rounded-xl bg-secondary px-3 py-2 xl:flex">
-            <RefreshCw className="size-3.5 text-primary" aria-hidden="true" />
-            <span className="text-xs font-medium text-secondary-foreground">
-              Última actualización: 20 jun 2026
-            </span>
-          </div>
+          {lastUploadLabel && (
+            <div className="hidden items-center gap-2 rounded-xl bg-secondary px-3 py-2 xl:flex">
+              <RefreshCw className="size-3.5 text-primary" aria-hidden="true" />
+              <span className="text-xs font-medium text-secondary-foreground">
+                Última actualización: {lastUploadLabel}
+              </span>
+            </div>
+          )}
 
           {/* Notifications */}
           <button
