@@ -23,9 +23,6 @@ export function CategoryCard({ category }: { category: Category }) {
           <h3 className="text-balance text-lg font-bold leading-tight text-[#fcf9f6]">
             {category.title}
           </h3>
-          <p className="mt-1 text-sm text-[#fcf9f6]/80">
-            {category.count} recursos
-          </p>
         </div>
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground transition-transform group-hover:scale-110">
           <ArrowUpRight className="size-4" aria-hidden="true" />
