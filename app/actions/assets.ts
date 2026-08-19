@@ -29,6 +29,27 @@ export async function getAssetsForUser(category?: string): Promise<Asset[]> {
     .orderBy(desc(assets.createdAt))
 }
 
+// Fecha de la última carga de archivos visible para el usuario actual (los
+// admin ven todo). Devuelve null si todavía no hay materiales cargados.
+export async function getLastAssetUpload(): Promise<Date | null> {
+  const user = await getCurrentUser()
+  if (!user) return null
+
+  const filters = []
+  if (user.role !== 'admin') {
+    filters.push(arrayContains(assets.visibility, [user.role]))
+  }
+
+  const [row] = await db
+    .select({ createdAt: assets.createdAt })
+    .from(assets)
+    .where(filters.length ? and(...filters) : undefined)
+    .orderBy(desc(assets.createdAt))
+    .limit(1)
+
+  return row?.createdAt ?? null
+}
+
 // Conteo de assets por categoría visibles para el usuario.
 export async function getAssetCounts(): Promise<Record<string, number>> {
   const rows = await getAssetsForUser()
