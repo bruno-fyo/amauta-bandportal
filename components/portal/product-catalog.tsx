@@ -127,6 +127,11 @@ function ProductCard({
 }) {
   const [imgError, setImgError] = useState(false)
   const showImage = !!product.imageUrl && !imgError
+  // Las imágenes servidas por /api/asset-file están detrás de sesión: el
+  // optimizador de Next las pide del lado del servidor sin la cookie del
+  // usuario y recibe 401. Para esas usamos unoptimized, así el navegador las
+  // pide directo (con la sesión). Las estáticas /products/*.png sí se optimizan.
+  const needsAuth = product.imageUrl?.startsWith('/api/') ?? false
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
@@ -137,6 +142,7 @@ function ProductCard({
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            unoptimized={needsAuth}
             onError={() => setImgError(true)}
             className="object-contain p-3 transition-transform duration-500 group-hover:scale-105"
           />
