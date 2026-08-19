@@ -167,10 +167,10 @@ export default function IdentidadPage() {
               Tagline institucional
             </p>
             <div>
-              <p className="font-heading text-4xl font-bold leading-tight">
+              <p className="font-heading text-4xl font-normal leading-tight">
                 Evolucionando
               </p>
-              <p className="font-heading text-4xl font-light leading-tight">
+              <p className="font-heading text-4xl font-bold leading-tight">
                 la agricultura
               </p>
             </div>
