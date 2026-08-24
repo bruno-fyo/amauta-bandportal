@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { FileText } from 'lucide-react'
+import { FileText, ShieldCheck } from 'lucide-react'
 import { Sidebar } from '@/components/portal/sidebar'
 import { Header } from '@/components/portal/header'
 import { requireUser } from '@/lib/session'
@@ -27,13 +27,22 @@ export default async function PortalLayout({ children }: { children: ReactNode }
               relación comercial vigente. Se prohíbe su modificación, edición,
               reventa o difusión fuera de dicho marco.
             </p>
-            <Link
-              href="/terminos"
-              className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-            >
-              <FileText className="size-3.5" aria-hidden="true" />
-              Términos y Condiciones
-            </Link>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <Link
+                href="/terminos"
+                className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+              >
+                <FileText className="size-3.5" aria-hidden="true" />
+                Términos y Condiciones
+              </Link>
+              <Link
+                href="/privacidad"
+                className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+              >
+                <ShieldCheck className="size-3.5" aria-hidden="true" />
+                Política de Privacidad
+              </Link>
+            </div>
           </div>
         </footer>
       </div>
