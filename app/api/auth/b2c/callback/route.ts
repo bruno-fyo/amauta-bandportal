@@ -48,10 +48,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'El token no es válido.' }, { status: 401 })
   }
 
-  // Log temporal de claims: sirve para confirmar cómo llega el email/nombre
-  // durante los primeros logins reales. Quitar luego.
-  console.log('[v0] entra claims recibidos:', JSON.stringify(payload))
-
   const { b2cId, email, name } = extractIdentity(payload)
   if (!b2cId || !email) {
     return NextResponse.json(
