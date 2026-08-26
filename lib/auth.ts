@@ -61,6 +61,17 @@ export const auth = betterAuth({
     // Al restablecer la contraseña, cerrar todas las sesiones activas del usuario.
     revokeSessionsOnPasswordReset: true,
   },
+  // Anti fuerza bruta / credential stuffing.
+  // Better Auth ya limita por defecto (en producción) las rutas sensibles por
+  // IP+ruta: /sign-in* y /sign-up* → 3 intentos cada 10s; /forget-password* y
+  // /email-otp/* → 3 cada 60s. El problema es que el storage por defecto es
+  // 'memory', que en serverless (Vercel) vive por-lambda y se reinicia, por lo
+  // que no protege de verdad. Al usar 'database' los contadores persisten en la
+  // tabla `rateLimit` (compartida entre todas las invocaciones). `enabled` sigue
+  // en su default: activo en producción, inactivo en desarrollo.
+  rateLimit: {
+    storage: 'database',
+  },
   plugins: [
     emailOTP({
       otpLength: 6,

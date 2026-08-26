@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, serial, integer, primaryKey } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean, serial, integer, bigint, primaryKey } from 'drizzle-orm/pg-core'
 
 // ---------------------------------------------------------------------------
 // Better Auth tables. Column names are camelCase to match Better Auth defaults.
@@ -69,6 +69,17 @@ export const verification = pgTable('verification', {
   expiresAt: timestamp('expiresAt').notNull(),
   createdAt: timestamp('createdAt').$defaultFn(() => new Date()),
   updatedAt: timestamp('updatedAt').$defaultFn(() => new Date()),
+})
+
+// Almacén de rate limiting de Better Auth (storage: 'database'). Persiste los
+// contadores por IP+ruta entre invocaciones serverless (el default 'memory' se
+// reinicia en cada lambda y no protege). Solo lo escribe/lee Better Auth vía su
+// propio pool pg; la app nunca la consulta. `lastRequest` es epoch en ms.
+export const rateLimit = pgTable('rateLimit', {
+  id: text('id').primaryKey(),
+  key: text('key').notNull().unique(),
+  count: integer('count').notNull(),
+  lastRequest: bigint('lastRequest', { mode: 'number' }).notNull(),
 })
 
 // ---------------------------------------------------------------------------
