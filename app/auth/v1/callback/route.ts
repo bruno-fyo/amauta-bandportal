@@ -68,11 +68,7 @@ export async function GET(request: Request) {
     idToken = await exchangeCodeForIdToken({ code, verifier })
   } catch (err) {
     console.error('[v0] b2c token exchange error:', err)
-    // DIAGNÓSTICO TEMPORAL: exponer el código AADSTS de Microsoft en la URL
-    // (no es dato sensible) para identificar la causa exacta del rechazo.
-    const msg = err instanceof Error ? err.message : String(err)
-    const aadsts = msg.match(/AADSTS\d+/)?.[0]
-    return loginError(aadsts ? `token_${aadsts}` : 'token')
+    return loginError('token')
   }
 
   // 2) Validación completa del token en el servidor.
