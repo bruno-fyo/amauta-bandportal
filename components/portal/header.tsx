@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Search, Bell, Menu, X, RefreshCw, LogOut } from 'lucide-react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { Search, Menu, X, RefreshCw, LogOut } from 'lucide-react'
 import { AmautaIso } from '@/components/brand/logo'
 import { authClient } from '@/lib/auth-client'
 import { navItemsForRole } from '@/lib/data'
@@ -25,6 +25,8 @@ export function Header({
   lastUpload: string | null
 }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const query = searchParams.get('q') ?? ''
   const [menuOpen, setMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
@@ -69,14 +71,22 @@ export function Header({
         </Link>
 
         {/* Search */}
-        <div className="relative ml-auto hidden max-w-md flex-1 md:ml-0 md:block">
+        <form
+          action="/buscar"
+          role="search"
+          className="relative ml-auto hidden max-w-md flex-1 md:ml-0 md:block"
+        >
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            key={query}
             type="search"
+            name="q"
+            defaultValue={query}
             placeholder="Buscar recursos, productos, campañas…"
+            aria-label="Buscar en el Centro de Recursos"
             className="h-11 w-full rounded-xl border border-border bg-card pl-10 pr-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/15"
           />
-        </div>
+        </form>
 
         <div className="ml-auto flex items-center gap-2 md:gap-3">
           {/* Last update */}
@@ -88,16 +98,6 @@ export function Header({
               </span>
             </div>
           )}
-
-          {/* Notifications */}
-          <button
-            type="button"
-            className="relative flex size-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted"
-            aria-label="Notificaciones"
-          >
-            <Bell className="size-5" />
-            <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-accent ring-2 ring-card" />
-          </button>
 
           {/* Profile */}
           <div className="relative">
@@ -154,14 +154,18 @@ export function Header({
 
       {/* Mobile search */}
       <div className="px-4 pb-3 md:hidden">
-        <div className="relative">
+        <form action="/buscar" role="search" className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            key={query}
             type="search"
+            name="q"
+            defaultValue={query}
             placeholder="Buscar recursos…"
+            aria-label="Buscar en el Centro de Recursos"
             className="h-11 w-full rounded-xl border border-border bg-card pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/15"
           />
-        </div>
+        </form>
       </div>
 
       {/* Mobile nav */}
