@@ -6,12 +6,11 @@ import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { MicrosoftLoginButton } from '@/components/auth/microsoft-login-button'
 import { PasswordRecovery } from '@/components/auth/password-recovery'
-import type { AuthPublicConfig } from '@/lib/b2c'
 
 export function LoginForm({
-  microsoftConfig = null,
+  showMicrosoft = false,
 }: {
-  microsoftConfig?: AuthPublicConfig | null
+  showMicrosoft?: boolean
 }) {
   const router = useRouter()
   const [mode, setMode] = useState<'login' | 'recover'>('login')
@@ -133,7 +132,7 @@ export function LoginForm({
         </button>
       </form>
 
-      {microsoftConfig && (
+      {showMicrosoft && (
         <>
           <div className="mt-6 flex items-center gap-3">
             <span className="h-px flex-1 bg-border" />
@@ -141,7 +140,7 @@ export function LoginForm({
             <span className="h-px flex-1 bg-border" />
           </div>
 
-          <MicrosoftLoginButton config={microsoftConfig} />
+          <MicrosoftLoginButton />
         </>
       )}
 

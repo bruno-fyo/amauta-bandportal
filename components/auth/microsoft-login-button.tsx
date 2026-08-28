@@ -2,51 +2,17 @@
 
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
-import type { AuthPublicConfig } from '@/lib/b2c'
-import {
-  createPkcePair,
-  randomUrlSafe,
-  PKCE_STORAGE_KEY,
-} from '@/lib/pkce'
 
 // Botón "Ingresar como colaborador Amauta".
-// Inicia el flujo Authorization Code + PKCE (estilo SPA): genera el par
-// verifier/challenge, guarda verifier+state+nonce en sessionStorage y redirige
-// a la pantalla de login corporativo de Microsoft (Entra ID).
-export function MicrosoftLoginButton({ config }: { config: AuthPublicConfig }) {
+// El flujo Authorization Code + PKCE es 100% server-side: este botón solo
+// navega a la ruta de inicio (/api/auth/b2c/login), que genera el handshake y
+// redirige a Microsoft. No se maneja PKCE ni config de OAuth en el navegador.
+export function MicrosoftLoginButton() {
   const [loading, setLoading] = useState(false)
 
-  async function handleClick() {
+  function handleClick() {
     setLoading(true)
-    try {
-      const { verifier, challenge } = await createPkcePair()
-      const state = randomUrlSafe(32)
-      const nonce = randomUrlSafe(32)
-
-      // Persistimos lo necesario para validar el retorno (mismo origen).
-      sessionStorage.setItem(
-        PKCE_STORAGE_KEY,
-        JSON.stringify({ verifier, state, nonce }),
-      )
-
-      const params = new URLSearchParams({
-        client_id: config.clientId,
-        response_type: 'code',
-        redirect_uri: config.redirectUri,
-        response_mode: 'query',
-        scope: config.scope,
-        state,
-        nonce,
-        code_challenge: challenge,
-        code_challenge_method: 'S256',
-        prompt: 'select_account',
-      })
-
-      window.location.assign(`${config.authorizeEndpoint}?${params.toString()}`)
-    } catch (err) {
-      console.error('[v0] pkce init error:', err)
-      setLoading(false)
-    }
+    window.location.assign('/api/auth/b2c/login')
   }
 
   return (
