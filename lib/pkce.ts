@@ -1,13 +1,6 @@
-// Helpers de PKCE para el navegador (Web Crypto API). Sin 'server-only':
-// se usan en componentes cliente (botón de login y página de callback).
-
-export const PKCE_STORAGE_KEY = 'amauta_pkce'
-
-export type PkceState = {
-  verifier: string
-  state: string
-  nonce: string
-}
+// Helpers de PKCE con Web Crypto API. Se usan server-side (route handlers del
+// flujo Authorization Code + PKCE); Web Crypto está disponible en el runtime
+// Node de Next. No dependen de next/headers, así que son runtime-agnósticos.
 
 // Cadena aleatoria URL-safe (sin padding) a partir de bytes seguros.
 export function randomUrlSafe(bytes = 32): string {

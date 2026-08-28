@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { AmautaWordmark } from '@/components/brand/logo'
 import { LoginForm } from '@/components/auth/login-form'
 import { getCurrentUser } from '@/lib/session'
-import { b2cConfigured, getAuthPublicConfig } from '@/lib/b2c'
+import { b2cConfigured } from '@/lib/b2c'
 
 // Ingreso principal del portal.
 // - Muestra nuestra pantalla con email + contraseña (Better Auth).
@@ -13,7 +13,7 @@ export default async function LoginPage() {
   const user = await getCurrentUser()
   if (user) redirect('/')
 
-  const microsoftConfig = b2cConfigured() ? getAuthPublicConfig() : null
+  const showMicrosoft = b2cConfigured()
 
   return (
     <main className="flex h-dvh overflow-hidden bg-background">
@@ -22,7 +22,7 @@ export default async function LoginPage() {
         <div className="mx-auto w-full max-w-md">
           <AmautaWordmark className="h-8 w-auto text-primary" />
 
-          <LoginForm microsoftConfig={microsoftConfig} />
+          <LoginForm showMicrosoft={showMicrosoft} />
         </div>
       </div>
 

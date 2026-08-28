@@ -17,33 +17,83 @@ const CLIENT_ID =
 // dependemos de la variable de entorno (que tenía el path viejo /auth/callback).
 const REDIRECT_URI = 'https://recursos.amauta.ag/auth/v1/callback'
 
+// Client secret — SOLO server-side. Nunca se expone al navegador ni como
+// NEXT_PUBLIC_. Habilita el canje confidencial del code (Authorization Code +
+// PKCE) contra el token endpoint desde el backend.
+const CLIENT_SECRET = process.env.AZURE_B2C_CLIENT_SECRET || ''
+
 const AUTHORITY = `https://login.microsoftonline.com/${TENANT_ID}`
 const SCOPE = 'openid profile email'
 
+const AUTHORIZE_ENDPOINT = `${AUTHORITY}/oauth2/v2.0/authorize`
+const TOKEN_ENDPOINT = `${AUTHORITY}/oauth2/v2.0/token`
+
 // ¿Está configurado el acceso corporativo? (permite degradar con elegancia).
+// Requiere el secret: sin él, el flujo server-side no puede canjear el code, así
+// que se oculta el botón en lugar de mostrar un login roto.
 export function b2cConfigured(): boolean {
-  return Boolean(TENANT_ID && CLIENT_ID && REDIRECT_URI)
+  return Boolean(TENANT_ID && CLIENT_ID && REDIRECT_URI && CLIENT_SECRET)
 }
 
-// Configuración PÚBLICA (no secreta) que el navegador necesita para iniciar el
-// flujo authorization code + PKCE e intercambiar el code por el id_token.
-// Se pasa como props desde componentes de servidor a los componentes cliente.
-export type AuthPublicConfig = {
-  authorizeEndpoint: string
-  tokenEndpoint: string
-  clientId: string
-  redirectUri: string
-  scope: string
-}
+// ---------------------------------------------------------------------------
+// Flujo Authorization Code + PKCE, 100% server-side.
+// El navegador nunca ve la config de OAuth, ni el code_verifier, ni los tokens
+// de Microsoft: solo recibe redirects y, al final, la cookie de sesión propia.
+// ---------------------------------------------------------------------------
 
-export function getAuthPublicConfig(): AuthPublicConfig {
-  return {
-    authorizeEndpoint: `${AUTHORITY}/oauth2/v2.0/authorize`,
-    tokenEndpoint: `${AUTHORITY}/oauth2/v2.0/token`,
-    clientId: CLIENT_ID,
-    redirectUri: REDIRECT_URI,
+// Construye la URL de authorize a la que el backend redirige (302) al usuario.
+export function buildAuthorizeUrl(p: {
+  challenge: string
+  state: string
+  nonce: string
+}): string {
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: REDIRECT_URI,
+    response_mode: 'query',
     scope: SCOPE,
+    state: p.state,
+    nonce: p.nonce,
+    code_challenge: p.challenge,
+    code_challenge_method: 'S256',
+    prompt: 'select_account',
+  })
+  return `${AUTHORIZE_ENDPOINT}?${params.toString()}`
+}
+
+// Canje confidencial del code por el id_token (server-to-server, con secret +
+// code_verifier). Requiere que la Redirect URI esté registrada como plataforma
+// "Web" en Entra; contra una URI "SPA" Microsoft responde AADSTS9002327.
+export async function exchangeCodeForIdToken(p: {
+  code: string
+  verifier: string
+}): Promise<string> {
+  const res = await fetch(TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code: p.code,
+      redirect_uri: REDIRECT_URI,
+      scope: SCOPE,
+      code_verifier: p.verifier,
+    }),
+    cache: 'no-store',
+  })
+  const data = (await res.json()) as {
+    id_token?: string
+    error?: string
+    error_description?: string
   }
+  if (!res.ok || !data.id_token) {
+    throw new Error(
+      data.error_description || data.error || 'No se pudo canjear el code por el token.',
+    )
+  }
+  return data.id_token
 }
 
 // ---------------------------------------------------------------------------

@@ -4,7 +4,7 @@ import { SESSION_COOKIE, verifySession } from '@/lib/session-token'
 // Rutas públicas que no requieren sesión.
 const PUBLIC_PATHS = [
   '/login', // pantalla de ingreso (email/contraseña + botón B2C)
-  '/auth/v1/callback', // retorno de Entra ID (canje PKCE en el navegador)
+  '/auth/v1/callback', // retorno de Entra ID (canje PKCE server-side)
   '/acceso-interno', // respaldo transitorio: login legacy email/contraseña
   '/acceso-restringido', // rol insuficiente
 ]
