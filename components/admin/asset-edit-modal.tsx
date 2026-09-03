@@ -122,7 +122,11 @@ export function AssetEditModal({
       setTimeout(() => onClose(), 700)
     } catch (err) {
       console.error('[v0] updateAsset upload error:', err)
-      setError('No se pudo guardar. Verificá el archivo y volvé a intentar.')
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : 'No se pudo guardar. Verificá el archivo y volvé a intentar.',
+      )
     } finally {
       setLoading(false)
       setProgress(0)
