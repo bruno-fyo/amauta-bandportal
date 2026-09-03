@@ -79,8 +79,9 @@ export type NewAssetInput = {
   fileSize: number
 }
 
-// Guarda el registro del asset en la base de datos tras una carga directa al
-// Blob. Solo admin. El archivo ya fue subido por el cliente vía /api/assets/upload.
+// Guarda el registro del asset en la base de datos tras subir el archivo al
+// Blob. Solo admin. El archivo ya fue subido por el helper uploadAssetFile
+// (server-side para ≤4 MB, o por partes vía /api/assets/chunk para archivos grandes).
 export async function saveAssetRecord(input: NewAssetInput): Promise<ActionResult> {
   try {
     const admin = await requireAdmin()
