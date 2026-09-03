@@ -91,7 +91,11 @@ export function AssetUploadForm() {
       setTimeout(() => setSuccess(false), 4000)
     } catch (err) {
       console.error('[v0] upload error:', err)
-      setError('No se pudo subir el archivo. Verificá el tamaño y volvé a intentar.')
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : 'No se pudo subir el archivo. Verificá el tamaño y volvé a intentar.',
+      )
     } finally {
       setLoading(false)
       setProgress(0)

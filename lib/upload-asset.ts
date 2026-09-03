@@ -58,11 +58,48 @@ export async function uploadAssetFile(
     return { fileName: file.name, filePathname: stored, fileUrl: url, fileSize: file.size }
   }
 
-  const blob = await upload(pathname, file, {
-    access: 'private',
-    handleUploadUrl: '/api/assets/upload',
-    multipart: true,
-    onUploadProgress: (e) => onProgress?.(Math.round(e.percentage)),
-  })
-  return { fileName: file.name, filePathname: blob.pathname, fileUrl: blob.url, fileSize: file.size }
+  // Archivo grande (> 4 MB): carga directa cliente→Blob. Es la única vía posible
+  // en Vercel (los route handlers no aceptan bodies grandes y el multipart de
+  // Blob exige partes ≥ 5 MB). Se usa un PUT único (no multipart): el handshake
+  // multipart, con sus requests de partes en paralelo, es la causa habitual de
+  // que la subida quede "colgada" detrás de un proxy corporativo.
+  //
+  // Watchdog: si no hay progreso durante STALL_MS, se aborta con un error claro
+  // en vez de dejar el botón en "Subiendo…" para siempre.
+  const STALL_MS = 90_000
+  const controller = new AbortController()
+  let lastActivity = Date.now()
+  let lastPct = -1
+  const watchdog = setInterval(() => {
+    if (Date.now() - lastActivity > STALL_MS) {
+      controller.abort()
+      clearInterval(watchdog)
+    }
+  }, 5_000)
+
+  try {
+    const blob = await upload(pathname, file, {
+      access: 'private',
+      handleUploadUrl: '/api/assets/upload',
+      abortSignal: controller.signal,
+      onUploadProgress: (e) => {
+        const pct = Math.round(e.percentage)
+        if (pct !== lastPct) {
+          lastPct = pct
+          lastActivity = Date.now()
+        }
+        onProgress?.(pct)
+      },
+    })
+    return { fileName: file.name, filePathname: blob.pathname, fileUrl: blob.url, fileSize: file.size }
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new Error(
+        'La subida se detuvo sin avanzar. Puede que tu red bloquee la subida directa de archivos grandes; probá desde otra red o comprimí el archivo.',
+      )
+    }
+    throw err
+  } finally {
+    clearInterval(watchdog)
+  }
 }
