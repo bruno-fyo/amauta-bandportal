@@ -24,6 +24,19 @@ export function UserTable({
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
+  const [roleFilter, setRoleFilter] = useState<Role | 'all'>('all')
+
+  const filters: { key: Role | 'all'; label: string; count: number }[] = [
+    { key: 'all', label: 'Todos', count: users.length },
+    ...ROLES.map((r) => ({
+      key: r,
+      label: ROLE_LABELS[r],
+      count: users.filter((u) => u.role === r).length,
+    })),
+  ]
+
+  const filteredUsers =
+    roleFilter === 'all' ? users : users.filter((u) => u.role === roleFilter)
 
   function togglePassword(userId: string) {
     setVisiblePasswords((prev) => ({ ...prev, [userId]: !prev[userId] }))
@@ -56,8 +69,37 @@ export function UserTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      {error && (
+    <div>
+      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar usuarios por rol">
+        {filters.map((f) => {
+          const active = roleFilter === f.key
+          return (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setRoleFilter(f.key)}
+              aria-pressed={active}
+              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                active
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              {f.label}
+              <span
+                className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                  active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                }`}
+              >
+                {f.count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        {error && (
         <div role="alert" className="flex items-center gap-2 border-b border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
           {error}
@@ -75,7 +117,7 @@ export function UserTable({
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {filteredUsers.map((u) => (
               <tr key={u.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
@@ -171,6 +213,12 @@ export function UserTable({
             ))}
           </tbody>
         </table>
+      </div>
+        {filteredUsers.length === 0 && (
+          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+            No hay usuarios que coincidan con este filtro.
+          </p>
+        )}
       </div>
     </div>
   )

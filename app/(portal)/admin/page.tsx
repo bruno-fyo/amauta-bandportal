@@ -4,6 +4,7 @@ import { AssetUploadForm } from '@/components/admin/asset-upload-form'
 import { AssetTable } from '@/components/admin/asset-table'
 import { UserTable } from '@/components/admin/user-table'
 import { UserCreateForm } from '@/components/admin/user-create-form'
+import { CollapsibleSection } from '@/components/admin/collapsible-section'
 import { CatalogManager } from '@/components/admin/catalog-manager'
 import { getAllAssets } from '@/app/actions/assets'
 import { getFichasMap } from '@/app/actions/fichas'
@@ -101,13 +102,13 @@ export default async function AdminPage() {
       </section>
 
       {/* Listado de assets */}
-      <section className="mb-12">
-        <SectionHeading
-          title="Materiales del portal"
-          description="Todos los materiales cargados, con su visibilidad y acciones."
-        />
+      <CollapsibleSection
+        title="Materiales del portal"
+        description="Todos los materiales cargados, con su visibilidad y acciones."
+        count={assets.length}
+      >
         <AssetTable assets={assets} />
-      </section>
+      </CollapsibleSection>
 
       {/* Catálogo de productos (familias, productos, fotos y fichas) */}
       <section className="mb-12">
@@ -130,13 +131,13 @@ export default async function AdminPage() {
       </section>
 
       {/* Gestión de usuarios */}
-      <section>
-        <SectionHeading
-          title="Usuarios y roles"
-          description="Cambiá el rol de cada usuario o eliminá cuentas que ya no necesiten acceso."
-        />
+      <CollapsibleSection
+        title="Usuarios y roles"
+        description="Cambiá el rol de cada usuario o eliminá cuentas que ya no necesiten acceso. Filtrá por tipo de usuario."
+        count={users.length}
+      >
         <UserTable users={users} currentUserId={admin.id} />
-      </section>
+      </CollapsibleSection>
     </div>
   )
 }
