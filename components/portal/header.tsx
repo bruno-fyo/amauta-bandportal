@@ -212,6 +212,22 @@ export function Header({
                 </Link>
               </li>
             )}
+            {user.role === 'admin' && (
+              <li className="col-span-2">
+                <Link
+                  href="/clientes"
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(
+                    'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                    pathname.startsWith('/clientes')
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-foreground hover:bg-muted',
+                  )}
+                >
+                  Listado de clientes
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       ) : null}
