@@ -1,5 +1,3 @@
-import { upload } from '@vercel/blob/client'
-
 // Sube un archivo a Vercel Blob a través de la ruta del servidor
 // `/api/assets/put`. Es más confiable en preview que la carga directa
 // cliente→Blob. El store es privado, así que devuelve la `url` de la ruta de
@@ -58,48 +56,55 @@ export async function uploadAssetFile(
     return { fileName: file.name, filePathname: stored, fileUrl: url, fileSize: file.size }
   }
 
-  // Archivo grande (> 4 MB): carga directa cliente→Blob. Es la única vía posible
-  // en Vercel (los route handlers no aceptan bodies grandes y el multipart de
-  // Blob exige partes ≥ 5 MB). Se usa un PUT único (no multipart): el handshake
-  // multipart, con sus requests de partes en paralelo, es la causa habitual de
-  // que la subida quede "colgada" detrás de un proxy corporativo.
-  //
-  // Watchdog: si no hay progreso durante STALL_MS, se aborta con un error claro
-  // en vez de dejar el botón en "Subiendo…" para siempre.
-  const STALL_MS = 90_000
-  const controller = new AbortController()
-  let lastActivity = Date.now()
-  let lastPct = -1
-  const watchdog = setInterval(() => {
-    if (Date.now() - lastActivity > STALL_MS) {
-      controller.abort()
-      clearInterval(watchdog)
-    }
-  }, 5_000)
+  // Archivo grande (> 4 MB): subida por partes a NUESTRO dominio. La carga
+  // directa cliente→Blob no sirve acá porque la red corporativa bloquea el
+  // dominio de Blob (`*.blob.vercel-storage.com`). En su lugar, partimos el
+  // archivo en trozos de 4 MB (cada request queda bajo el límite de ~4.5 MB del
+  // route handler) y el servidor los reensambla en el blob final.
+  const CHUNK_SIZE = 4 * 1024 * 1024 // 4 MB
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
+  const uploadId = crypto.randomUUID().replace(/-/g, '')
 
-  try {
-    const blob = await upload(pathname, file, {
-      access: 'private',
-      handleUploadUrl: '/api/assets/upload',
-      abortSignal: controller.signal,
-      onUploadProgress: (e) => {
-        const pct = Math.round(e.percentage)
-        if (pct !== lastPct) {
-          lastPct = pct
-          lastActivity = Date.now()
-        }
-        onProgress?.(pct)
-      },
-    })
-    return { fileName: file.name, filePathname: blob.pathname, fileUrl: blob.url, fileSize: file.size }
-  } catch (err) {
-    if (controller.signal.aborted) {
-      throw new Error(
-        'La subida se detuvo sin avanzar. Puede que tu red bloquee la subida directa de archivos grandes; probá desde otra red o comprimí el archivo.',
-      )
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK_SIZE
+    const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size))
+
+    const fd = new FormData()
+    fd.append('chunk', chunk, `${uploadId}-${i}`)
+    fd.append('uploadId', uploadId)
+    fd.append('index', String(i))
+
+    const res = await fetch('/api/assets/chunk', { method: 'POST', body: fd })
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null
+      throw new Error(data?.error ?? `No se pudo subir la parte ${i + 1} de ${totalChunks}.`)
     }
-    throw err
-  } finally {
-    clearInterval(watchdog)
+
+    // Reservamos el último 5% para el ensamblado en el servidor.
+    onProgress?.(Math.round(((i + 1) / totalChunks) * 95))
   }
+
+  // Ensamblado final en el servidor.
+  const completeRes = await fetch('/api/assets/chunk/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      uploadId,
+      totalChunks,
+      category,
+      fileName: file.name,
+      contentType: file.type || 'application/octet-stream',
+    }),
+  })
+  if (!completeRes.ok) {
+    const data = (await completeRes.json().catch(() => null)) as { error?: string } | null
+    throw new Error(data?.error ?? 'No se pudo ensamblar el archivo en el servidor.')
+  }
+
+  const { url, pathname: stored } = (await completeRes.json()) as {
+    url: string
+    pathname: string
+  }
+  onProgress?.(100)
+  return { fileName: file.name, filePathname: stored, fileUrl: url, fileSize: file.size }
 }
