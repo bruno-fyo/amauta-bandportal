@@ -158,8 +158,8 @@ export async function updateAsset(input: UpdateAssetInput): Promise<ActionResult
     const [row] = await db.select().from(assets).where(eq(assets.id, input.id))
     if (!row) return { ok: false, error: 'El material ya no existe.' }
 
-    // ¿Se resubió un archivo? Se detecta por la presencia de una URL nueva.
-    const hasNewFile = Boolean(input.fileUrl && input.filePathname)
+    // ¿Se resubió un archivo? Se detecta por la presencia del pathname nuevo.
+    const hasNewFile = Boolean(input.filePathname && input.fileUrl)
 
     const values: Partial<typeof assets.$inferInsert> = {
       title,
@@ -180,10 +180,12 @@ export async function updateAsset(input: UpdateAssetInput): Promise<ActionResult
 
     await db.update(assets).set(values).where(eq(assets.id, input.id))
 
-    // Borrar el archivo anterior del Blob recién ahora que la BD ya apunta al nuevo.
-    if (hasNewFile && row.fileUrl && row.fileUrl !== input.fileUrl) {
+    // Borrar el archivo anterior del Blob recién ahora que la BD ya apunta al
+    // nuevo. Se usa filePathname (del() lo acepta) porque para las subidas
+    // server-side fileUrl es una URL de servicio, no la URL real del blob.
+    if (hasNewFile && row.filePathname && row.filePathname !== input.filePathname) {
       try {
-        await del(row.fileUrl)
+        await del(row.filePathname)
       } catch (e) {
         console.error('[v0] blob del (update) error:', e)
       }
@@ -205,9 +207,9 @@ export async function deleteAsset(id: number): Promise<ActionResult> {
     const [row] = await db.select().from(assets).where(eq(assets.id, id))
     if (!row) return { ok: false, error: 'El material ya no existe.' }
 
-    if (row.fileUrl) {
+    if (row.filePathname) {
       try {
-        await del(row.fileUrl)
+        await del(row.filePathname)
       } catch (e) {
         console.error('[v0] blob del error:', e)
       }

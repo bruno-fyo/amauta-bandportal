@@ -61,6 +61,7 @@ export const FILE_TYPES = [
   'PPTX',
   'MP4',
   'DOCX',
+  'XLSX',
 ] as const
 
 export type FileTypeOption = (typeof FILE_TYPES)[number]

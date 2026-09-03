@@ -28,8 +28,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             'image/webp',
             'application/zip',
             'application/x-zip-compressed',
+            // PowerPoint
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
             'application/vnd.ms-powerpoint',
+            // Word
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword',
+            // Excel
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            // Video
             'video/mp4',
             'video/quicktime',
             'video/webm',

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { upload } from '@vercel/blob/client'
 import {
   Loader2,
   CheckCircle2,
@@ -13,6 +12,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { updateAsset } from '@/app/actions/assets'
+import { uploadAssetFile } from '@/lib/upload-asset'
 import { CATEGORIES, FILE_TYPES } from '@/lib/categories'
 import { ROLE_LABELS, ROLES, type Asset, type Role } from '@/lib/db/schema'
 import { cn } from '@/lib/utils'
@@ -91,17 +91,12 @@ export function AssetEditModal({
         | undefined
 
       if (file && file.size > 0) {
-        const blob = await upload(`assets/${category}/${file.name}`, file, {
-          access: 'private',
-          handleUploadUrl: '/api/assets/upload',
-          multipart: true,
-          onUploadProgress: (e) => setProgress(Math.round(e.percentage)),
-        })
+        const uploaded = await uploadAssetFile(category, file, setProgress)
         fileData = {
-          fileName: file.name,
-          filePathname: blob.pathname,
-          fileUrl: blob.url,
-          fileSize: file.size,
+          fileName: uploaded.fileName,
+          filePathname: uploaded.filePathname,
+          fileUrl: uploaded.fileUrl,
+          fileSize: uploaded.fileSize,
         }
       }
 
@@ -403,7 +398,7 @@ export function AssetEditModal({
               {loading ? (
                 <>
                   <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                  {progress > 0 ? `Subiendo… ${progress}%` : 'Guardando…'}
+                  {progress > 0 ? `Subiendo… ${progress}%` : 'Guardando��'}
                 </>
               ) : (
                 <>
