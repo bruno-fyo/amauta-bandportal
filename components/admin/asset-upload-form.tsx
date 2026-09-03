@@ -2,9 +2,9 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { upload } from '@vercel/blob/client'
 import { UploadCloud, Loader2, CheckCircle2, AlertCircle, FileUp, X } from 'lucide-react'
 import { saveAssetRecord } from '@/app/actions/assets'
+import { uploadAssetFile } from '@/lib/upload-asset'
 import { CATEGORIES, FILE_TYPES } from '@/lib/categories'
 import { ROLE_LABELS, ROLES, type Role } from '@/lib/db/schema'
 import { cn } from '@/lib/utils'
@@ -60,13 +60,9 @@ export function AssetUploadForm() {
     setProgress(0)
 
     try {
-      // Carga directa del navegador a Vercel Blob (soporta archivos grandes).
-      const blob = await upload(`assets/${category}/${file.name}`, file, {
-        access: 'private',
-        handleUploadUrl: '/api/assets/upload',
-        multipart: true,
-        onUploadProgress: (e) => setProgress(Math.round(e.percentage)),
-      })
+      // Subida híbrida: server-side para archivos chicos (evita el cuelgue tras
+      // el proxy), carga directa para archivos grandes (videos/ZIP).
+      const uploaded = await uploadAssetFile(category, file, setProgress)
 
       // Registro del asset en la base de datos.
       const result = await saveAssetRecord({
@@ -76,10 +72,10 @@ export function AssetUploadForm() {
         fileType,
         tags,
         visibility,
-        fileName: file.name,
-        filePathname: blob.pathname,
-        fileUrl: blob.url,
-        fileSize: file.size,
+        fileName: uploaded.fileName,
+        filePathname: uploaded.filePathname,
+        fileUrl: uploaded.fileUrl,
+        fileSize: uploaded.fileSize,
       })
 
       if (!result.ok) {
