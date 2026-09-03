@@ -6,6 +6,7 @@ import { uploadAsset } from '@/lib/upload-asset'
 import {
   AlertCircle,
   CheckCircle2,
+  ChevronDown,
   Download,
   FolderPlus,
   ImagePlus,
@@ -155,6 +156,7 @@ function FamilyCard({
   onNotify: Notify
 }) {
   const router = useRouter()
+  const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [addingProduct, setAddingProduct] = useState(false)
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
@@ -181,21 +183,36 @@ function FamilyCard({
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex items-center gap-3 border-b border-border bg-muted/40 px-5 py-3">
-        <span
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg font-heading text-sm font-bold text-white"
-          style={{ backgroundColor: family.color }}
-          aria-hidden="true"
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="group flex min-w-0 flex-1 items-center gap-3 text-left"
+          title={open ? 'Contraer familia' : 'Expandir familia'}
         >
-          {family.name.charAt(0)}
-        </span>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate font-heading text-sm font-bold text-foreground">
-            Familia {family.name}
-          </h3>
-          <p className="truncate text-xs text-muted-foreground">
-            {family.type ?? 'Sin categoría'} · {family.products.length} productos
-          </p>
-        </div>
+          <ChevronDown
+            className={cn(
+              'size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:text-foreground',
+              open && 'rotate-180',
+            )}
+            aria-hidden="true"
+          />
+          <span
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg font-heading text-sm font-bold text-white"
+            style={{ backgroundColor: family.color }}
+            aria-hidden="true"
+          >
+            {family.name.charAt(0)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate font-heading text-sm font-bold text-foreground">
+              Familia {family.name}
+            </h3>
+            <p className="truncate text-xs text-muted-foreground">
+              {family.type ?? 'Sin categoría'} · {family.products.length} productos
+            </p>
+          </div>
+        </button>
         <button
           type="button"
           onClick={() => setEditing((v) => !v)}
@@ -233,54 +250,58 @@ function FamilyCard({
         </div>
       )}
 
-      <ul className="divide-y divide-border">
-        {family.products.map((product) =>
-          editingProductId === product.id ? (
-            <li key={product.id} className="p-5">
+      {open && (
+        <>
+          <ul className="divide-y divide-border">
+            {family.products.map((product) =>
+              editingProductId === product.id ? (
+                <li key={product.id} className="p-5">
+                  <ProductForm
+                    mode="edit"
+                    familyId={family.id}
+                    allFamilies={allFamilies}
+                    product={product}
+                    onNotify={onNotify}
+                    onDone={() => setEditingProductId(null)}
+                    onCancel={() => setEditingProductId(null)}
+                  />
+                </li>
+              ) : (
+                <ProductRow
+                  key={product.id}
+                  product={product}
+                  familyName={family.name}
+                  fichas={fichas[product.slug] ?? {}}
+                  onEdit={() => setEditingProductId(product.id)}
+                  onNotify={onNotify}
+                />
+              ),
+            )}
+          </ul>
+
+          <div className="border-t border-border p-4">
+            {addingProduct ? (
               <ProductForm
-                mode="edit"
+                mode="create"
                 familyId={family.id}
                 allFamilies={allFamilies}
-                product={product}
                 onNotify={onNotify}
-                onDone={() => setEditingProductId(null)}
-                onCancel={() => setEditingProductId(null)}
+                onDone={() => setAddingProduct(false)}
+                onCancel={() => setAddingProduct(false)}
               />
-            </li>
-          ) : (
-            <ProductRow
-              key={product.id}
-              product={product}
-              familyName={family.name}
-              fichas={fichas[product.slug] ?? {}}
-              onEdit={() => setEditingProductId(product.id)}
-              onNotify={onNotify}
-            />
-          ),
-        )}
-      </ul>
-
-      <div className="border-t border-border p-4">
-        {addingProduct ? (
-          <ProductForm
-            mode="create"
-            familyId={family.id}
-            allFamilies={allFamilies}
-            onNotify={onNotify}
-            onDone={() => setAddingProduct(false)}
-            onCancel={() => setAddingProduct(false)}
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setAddingProduct(true)}
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-          >
-            <Plus className="size-3.5" aria-hidden="true" />
-            Agregar producto a {family.name}
-          </button>
-        )}
-      </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setAddingProduct(true)}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                <Plus className="size-3.5" aria-hidden="true" />
+                Agregar producto a {family.name}
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }
