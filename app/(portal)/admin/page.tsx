@@ -111,13 +111,13 @@ export default async function AdminPage() {
       </CollapsibleSection>
 
       {/* Catálogo de productos (familias, productos, fotos y fichas) */}
-      <section className="mb-12">
-        <SectionHeading
-          title="Catálogo de productos"
-          description="Creá, editá y eliminá familias y productos. Cargá la foto mock-up y la ficha técnica de cada producto. Los cambios se reflejan al instante en la sección Productos."
-        />
+      <CollapsibleSection
+        title="Catálogo de productos"
+        description="Creá, editá y eliminá familias y productos. Cargá la foto mock-up y la ficha técnica de cada producto. Los cambios se reflejan al instante en la sección Productos."
+        count={totalProducts}
+      >
         <CatalogManager families={catalog} fichas={fichaInfos} />
-      </section>
+      </CollapsibleSection>
 
       {/* Alta de usuarios */}
       <section className="mb-12">
