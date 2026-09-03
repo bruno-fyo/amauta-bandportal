@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, LifeBuoy, ShieldCheck } from 'lucide-react'
+import { LogOut, LifeBuoy, ShieldCheck, ClipboardList } from 'lucide-react'
 import { AmautaWordmark } from '@/components/brand/logo'
 import { authClient } from '@/lib/auth-client'
 import { navItemsForRole } from '@/lib/data'
@@ -97,6 +97,28 @@ export function Sidebar({ role }: { role: Role }) {
                     aria-hidden="true"
                   />
                   Panel de Administración
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/clientes"
+                  className={cn(
+                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                    pathname.startsWith('/clientes')
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+                  )}
+                >
+                  <ClipboardList
+                    className={cn(
+                      'size-[18px] shrink-0 transition-colors',
+                      pathname.startsWith('/clientes')
+                        ? 'text-sidebar-primary'
+                        : 'text-sidebar-foreground/60 group-hover:text-sidebar-primary',
+                    )}
+                    aria-hidden="true"
+                  />
+                  Listado de clientes
                 </Link>
               </li>
             </ul>
