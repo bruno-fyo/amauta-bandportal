@@ -1,4 +1,4 @@
-import { Download, Calendar, FileText } from 'lucide-react'
+import { Download, Calendar, FileText, Eye } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ExpandableText } from '@/components/portal/expandable-text'
 import { CATEGORY_LABELS, type CategoryKey } from '@/lib/categories'
@@ -19,8 +19,13 @@ function formatSize(bytes: number | null) {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
 
+// Tipos que el navegador puede previsualizar en línea. Para el resto
+// (ZIP, Office) "Ver" solo terminaría descargando, así que se oculta.
+const PREVIEWABLE_TYPES = new Set(['PDF', 'PNG', 'JPG', 'SVG', 'WEBP', 'MP4'])
+
 export function AssetCard({ asset }: { asset: Asset }) {
   const size = formatSize(asset.fileSize)
+  const canPreview = PREVIEWABLE_TYPES.has(asset.fileType?.toUpperCase() ?? '')
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
@@ -58,13 +63,26 @@ export function AssetCard({ asset }: { asset: Asset }) {
         </div>
 
         {asset.filePathname ? (
-          <a
-            href={`/api/assets/${asset.id}/download?download=1`}
-            className="mt-1 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-secondary text-sm font-semibold text-secondary-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
-          >
-            <Download className="size-4" aria-hidden="true" />
-            Descargar
-          </a>
+          <div className="mt-1 flex gap-2">
+            {canPreview ? (
+              <a
+                href={`/api/assets/${asset.id}/download`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-transparent text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+              >
+                <Eye className="size-4" aria-hidden="true" />
+                Ver
+              </a>
+            ) : null}
+            <a
+              href={`/api/assets/${asset.id}/download?download=1`}
+              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-secondary text-sm font-semibold text-secondary-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
+            >
+              <Download className="size-4" aria-hidden="true" />
+              Descargar
+            </a>
+          </div>
         ) : (
           <span className="mt-1 inline-flex h-10 w-full items-center justify-center rounded-xl bg-muted text-sm font-semibold text-muted-foreground">
             No disponible
