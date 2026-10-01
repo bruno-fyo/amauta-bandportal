@@ -24,7 +24,8 @@ export function AssetUploadForm() {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [notifyUsers, setNotifyUsers] = useState(false)
 
   function toggleRole(role: Role) {
     setVisibility((prev) =>
@@ -35,7 +36,7 @@ export function AssetUploadForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
-    setSuccess(false)
+    setSuccess(null)
 
     const formData = new FormData(e.currentTarget)
     const title = String(formData.get('title') ?? '').trim()
@@ -76,6 +77,7 @@ export function AssetUploadForm() {
         filePathname: uploaded.filePathname,
         fileUrl: uploaded.fileUrl,
         fileSize: uploaded.fileSize,
+        notifyUsers,
       })
 
       if (!result.ok) {
@@ -83,12 +85,18 @@ export function AssetUploadForm() {
         return
       }
 
-      setSuccess(true)
+      if (result.notifyError) setError(result.notifyError)
+      setSuccess(
+        notifyUsers && !result.notifyError
+          ? `Material cargado. Se notificó a ${result.notified ?? 0} usuario${result.notified === 1 ? '' : 's'}.`
+          : 'Material cargado correctamente.',
+      )
       setFileName(null)
+      setNotifyUsers(false)
       formRef.current?.reset()
       setVisibility(['distribuidor', 'colaborador'])
       router.refresh()
-      setTimeout(() => setSuccess(false), 4000)
+      setTimeout(() => setSuccess(null), 6000)
     } catch (err) {
       console.error('[v0] upload error:', err)
       setError(
@@ -119,7 +127,7 @@ export function AssetUploadForm() {
           className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-primary"
         >
           <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <span>Material cargado correctamente.</span>
+          <span>{success}</span>
         </div>
       )}
 
@@ -276,6 +284,30 @@ export function AssetUploadForm() {
           />
         </label>
       </div>
+
+      <label
+        htmlFor="notifyUsers"
+        className={cn(
+          'flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-colors',
+          notifyUsers ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-muted',
+        )}
+      >
+        <input
+          id="notifyUsers"
+          type="checkbox"
+          checked={notifyUsers}
+          onChange={(e) => setNotifyUsers(e.target.checked)}
+          className="mt-0.5 size-4 shrink-0 accent-primary"
+        />
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold text-foreground">
+            Notificar a todos los usuarios la carga de este material
+          </span>
+          <span className="text-xs leading-relaxed text-muted-foreground">
+            Se envía un correo a los usuarios de los roles con visibilidad (y a los administradores).
+          </span>
+        </span>
+      </label>
 
       {loading && (
         <div
