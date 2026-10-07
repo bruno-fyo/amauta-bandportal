@@ -16,10 +16,13 @@ import {
 //   - N8N_ASSET_NOTIFY_WEBHOOK_SECRET  (opcional; si falta se reutiliza
 //                                       N8N_PASSWORD_RESET_WEBHOOK_SECRET)
 //
-// Cada request lleva un lote de destinatarios. n8n debe enviar UN correo por
-// destinatario (no poner a todos en el mismo "Para", expondría los emails).
+// n8n debe enviar UN correo por destinatario (no poner a todos en el mismo
+// "Para", expondría los emails). Se manda todo en un solo request: n8n responde
+// 202 al instante y regula el ritmo de envío él mismo (Exchange Online limita a
+// ~30 mails/min). Varios lotes dispararían ejecuciones en paralelo y superarían
+// ese límite, por eso el lote es grande (ver n8n/notificar-nuevo-material.json).
 
-const BATCH_SIZE = 50
+const BATCH_SIZE = 1000
 const WEBHOOK_TIMEOUT_MS = 15_000
 
 export type NotifyResult =
