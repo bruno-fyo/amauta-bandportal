@@ -22,6 +22,13 @@ import {
 // ~30 mails/min). Varios lotes dispararían ejecuciones en paralelo y superarían
 // ese límite, por eso el lote es grande (ver n8n/notificar-nuevo-material.json).
 
+// MODO PRUEBA: mientras esta lista tenga emails, la notificación se envía SOLO
+// a estas direcciones (no a la base de usuarios). Vaciarla (`[]`) para activar
+// el envío real a todos.
+const TEST_RECIPIENTS: { email: string; name: string }[] = [
+  { email: 'bsantandrea@fyo.com', name: 'Bruno Santandrea' },
+]
+
 const BATCH_SIZE = 1000
 const WEBHOOK_TIMEOUT_MS = 15_000
 
@@ -60,7 +67,7 @@ export async function notifyUsersOfNewAsset(
     process.env.N8N_ASSET_NOTIFY_WEBHOOK_SECRET ??
     process.env.N8N_PASSWORD_RESET_WEBHOOK_SECRET
 
-  const recipients = await getRecipients(visibility)
+  const recipients = TEST_RECIPIENTS.length ? TEST_RECIPIENTS : await getRecipients(visibility)
   if (recipients.length === 0) return { ok: true, sent: 0 }
 
   const { subject, html, text } = buildAssetNotificationEmail(asset)
