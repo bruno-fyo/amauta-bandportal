@@ -6,8 +6,22 @@ import { and, arrayContains, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { assets, type Asset, type Role } from '@/lib/db/schema'
 import { getCurrentUser, requireAdmin } from '@/lib/session'
+import { headers } from 'next/headers'
+import { CATEGORIES } from '@/lib/categories'
+import { notifyUsersOfNewAsset } from '@/lib/notify-asset'
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
+
+export type SaveAssetResult =
+  | { ok: true; notified?: number; notifyError?: string }
+  | { ok: false; error: string }
+
+async function getBaseUrl(): Promise<string> {
+  const h = await headers()
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'recursos.amauta.ag'
+  const proto = h.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https')
+  return `${proto}://${host}`
+}
 
 // Lectura de assets visibles para el rol del usuario actual, opcionalmente
 // filtrados por categoría. Los admin ven todo.
@@ -77,12 +91,14 @@ export type NewAssetInput = {
   filePathname: string
   fileUrl: string
   fileSize: number
+  // Enviar mail de aviso a los usuarios que pueden ver el material.
+  notifyUsers?: boolean
 }
 
 // Guarda el registro del asset en la base de datos tras subir el archivo al
 // Blob. Solo admin. El archivo ya fue subido por el helper uploadAssetFile
 // (server-side para ≤4 MB, o por partes vía /api/assets/chunk para archivos grandes).
-export async function saveAssetRecord(input: NewAssetInput): Promise<ActionResult> {
+export async function saveAssetRecord(input: NewAssetInput): Promise<SaveAssetResult> {
   try {
     const admin = await requireAdmin()
 
@@ -99,9 +115,11 @@ export async function saveAssetRecord(input: NewAssetInput): Promise<ActionResul
     if (!input.fileUrl || !input.filePathname)
       return { ok: false, error: 'Falta la información del archivo subido.' }
 
+    const description = input.description?.trim() || null
+
     await db.insert(assets).values({
       title,
-      description: input.description?.trim() || null,
+      description,
       category,
       fileType,
       fileName: input.fileName,
@@ -115,7 +133,24 @@ export async function saveAssetRecord(input: NewAssetInput): Promise<ActionResul
 
     revalidatePath('/admin')
     revalidatePath('/')
-    return { ok: true }
+
+    if (!input.notifyUsers) return { ok: true }
+
+    const meta = CATEGORIES.find((c) => c.key === category)
+    const result = await notifyUsersOfNewAsset(
+      {
+        title,
+        description,
+        categoryLabel: meta?.label ?? category,
+        fileType,
+        url: `${await getBaseUrl()}${meta?.href ?? '/'}`,
+      },
+      visibility,
+    )
+
+    return result.ok
+      ? { ok: true, notified: result.sent }
+      : { ok: true, notified: result.sent, notifyError: result.error }
   } catch (err) {
     console.error('[v0] saveAssetRecord error:', err)
     return { ok: false, error: 'No se pudo registrar el material. Intentá de nuevo.' }
