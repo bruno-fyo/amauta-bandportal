@@ -9,7 +9,8 @@ import {
 } from '@/lib/emails/asset-notification'
 
 // Envío masivo de "nuevo material" vía webhook de n8n (mismo esquema que el
-// OTP de recuperación: POST JSON + header x-amauta-secret; n8n envía por Outlook).
+// OTP de recuperación: POST JSON + header x-amauta-secret; n8n envía por la
+// cuenta de Gmail de Amauta).
 //
 // Variables de entorno:
 //   - N8N_ASSET_NOTIFY_WEBHOOK_URL     (obligatoria)
@@ -18,9 +19,10 @@ import {
 //
 // n8n debe enviar UN correo por destinatario (no poner a todos en el mismo
 // "Para", expondría los emails). Se manda todo en un solo request: n8n responde
-// 202 al instante y regula el ritmo de envío él mismo (Exchange Online limita a
-// ~30 mails/min). Varios lotes dispararían ejecuciones en paralelo y superarían
-// ese límite, por eso el lote es grande (ver n8n/notificar-nuevo-material.json).
+// 202 al instante y regula el ritmo de envío él mismo (tandas de 25 con pausa,
+// para no chocar con los límites de envío de Gmail). Varios lotes dispararían
+// ejecuciones en paralelo, por eso el lote es grande (ver
+// n8n/notificar-nuevo-material.json).
 
 // MODO PRUEBA: mientras esta lista tenga emails, la notificación se envía SOLO
 // a estas direcciones (no a la base de usuarios). Vaciarla (`[]`) para activar

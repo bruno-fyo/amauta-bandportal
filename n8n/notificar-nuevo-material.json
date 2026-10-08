@@ -127,35 +127,38 @@
       "parameters": {
         "resource": "message",
         "operation": "send",
-        "toRecipients": "={{ $json.email }}",
+        "sendTo": "={{ $json.email }}",
         "subject": "={{ $('Webhook').first().json.body.subject }}",
-        "bodyContent": "={{ $('Webhook').first().json.body.html }}",
-        "additionalFields": {
-          "bodyContentType": "html"
+        "emailType": "html",
+        "message": "={{ $('Webhook').first().json.body.html }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Amauta"
         }
       },
       "id": "0f6f3c1e-1a2b-4c3d-9e01-a1b2c3d4e507",
-      "name": "Enviar mail (Outlook)",
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
+      "name": "Enviar mail (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [1100, 280],
+      "webhookId": "5b1d2c3e-4f50-4a61-8b72-93a4b5c6d703",
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "onError": "continueRegularOutput",
       "credentials": {
-        "microsoftOutlookOAuth2Api": {
+        "gmailOAuth2": {
           "id": "",
-          "name": "Microsoft Outlook - Amauta"
+          "name": "Gmail - Amauta"
         }
       }
     },
     {
       "parameters": {
-        "amount": 65
+        "amount": 20
       },
       "id": "0f6f3c1e-1a2b-4c3d-9e01-a1b2c3d4e508",
-      "name": "Pausa 65 s (límite Exchange)",
+      "name": "Pausa 20 s (límite Gmail)",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [1320, 280],
@@ -198,18 +201,18 @@
       "main": [
         [],
         [
-          { "node": "Enviar mail (Outlook)", "type": "main", "index": 0 }
+          { "node": "Enviar mail (Gmail)", "type": "main", "index": 0 }
         ]
       ]
     },
-    "Enviar mail (Outlook)": {
+    "Enviar mail (Gmail)": {
       "main": [
         [
-          { "node": "Pausa 65 s (límite Exchange)", "type": "main", "index": 0 }
+          { "node": "Pausa 20 s (límite Gmail)", "type": "main", "index": 0 }
         ]
       ]
     },
-    "Pausa 65 s (límite Exchange)": {
+    "Pausa 20 s (límite Gmail)": {
       "main": [
         [
           { "node": "Tandas de 25", "type": "main", "index": 0 }
