@@ -1,5 +1,5 @@
 // Mail "nuevo material cargado". Todo el contenido vive acá: el portal arma el
-// HTML con los datos del material y n8n solo lo envía por Outlook.
+// HTML con los datos del material y n8n solo lo envía por Gmail.
 //
 // Partes dinámicas (se completan con el material cargado):
 //   - Preheader y asunto        → título
@@ -19,7 +19,6 @@ export type AssetNotificationData = {
 }
 
 const PORTAL_URL = 'https://recursos.amauta.ag'
-const HERO_IMAGE = 'https://fyo.com/fyo/Amauta/elementos/centrohero1.png'
 const LOGO_WHITE = 'https://fyo.com/fyo/Amauta/elementos/Amauta-Blanco.png'
 
 const FONT_HEADING = `'Geogrotesque','Avenir Next',Avenir,'Arial Narrow',Arial,sans-serif`
@@ -107,7 +106,7 @@ export function buildAssetNotificationEmail(data: AssetNotificationData) {
 <body style="margin:0;padding:0;background-color:#EDE6DE;">
 
   <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
-    Nuevo material disponible: ${title}. Ya podés descargarlo desde el Centro de Recursos.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+    Sumamos nuevo material al Centro de Recursos: ${title}. Ya está disponible para descargar.&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
   </div>
 
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#EDE6DE;">
@@ -134,12 +133,6 @@ export function buildAssetNotificationEmail(data: AssetNotificationData) {
           </tr>
 
           <tr>
-            <td style="background-color:#4A2A1C;padding:0;line-height:0;">
-              <img src="${HERO_IMAGE}" alt="" width="600" height="260" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;">
-            </td>
-          </tr>
-
-          <tr>
             <td class="pad-hero" style="background-color:#623B2A;padding:36px 36px 44px 36px;">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:20px;">
                 <tr>
@@ -149,10 +142,10 @@ export function buildAssetNotificationEmail(data: AssetNotificationData) {
                 </tr>
               </table>
               <h1 class="hero-title avenir-bold" style="margin:0 0 16px 0;font-family:${FONT_HEADING};font-size:34px;font-weight:700;line-height:1.15;color:#ffffff;letter-spacing:-0.3px;">
-                Hay nuevo material en el<br>Centro de recursos
+                Novedades en el Centro de recursos
               </h1>
               <p style="margin:0;font-family:${FONT_BODY};font-size:16px;font-weight:300;color:rgba(255,255,255,0.80);line-height:1.65;">
-                Seguimos sumando herramientas para que puedas comunicar Amauta y acompañar a tus clientes. Ya está disponible un nuevo material para que lo descargues y lo uses en tus canales.
+                Ya está disponible un nuevo material para que lo descargues y lo uses.
               </p>
             </td>
           </tr>
@@ -174,9 +167,6 @@ export function buildAssetNotificationEmail(data: AssetNotificationData) {
                   <td style="padding:24px;">
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                       <tr>
-                        <td class="stack stack-img" valign="top" width="160" style="padding-right:20px;">
-                          <img src="${HERO_IMAGE}" alt="" width="140" style="display:block;width:140px;max-width:100%;height:auto;border-radius:6px;border:0;outline:none;text-decoration:none;">
-                        </td>
                         <td class="stack" valign="middle">
                           <span style="display:inline-block;background-color:#623B2A;color:#CEDC00;font-family:${FONT_HEADING};font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:2px;margin-bottom:12px;">
                             ${category}
@@ -200,7 +190,6 @@ export function buildAssetNotificationEmail(data: AssetNotificationData) {
               </h2>
 
               ${howToItem('&#11015;&#65039;', '<b>Ingresá con tu usuario</b> al Centro de Recursos y descargalo desde su sección.')}
-              ${howToItem('&#128227;', '<b>Compartilo</b> en tus redes, por WhatsApp o en tu punto de venta.')}
               ${howToItem('&#129309;', '<b>Usalo tal cual</b>: respeta la identidad de Amauta y está listo para publicar.', true)}
 
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:28px;">
@@ -279,7 +268,7 @@ export function buildAssetNotificationEmail(data: AssetNotificationData) {
 </html>`
 
   const text = [
-    'Hay nuevo material en el Centro de Recursos de Amauta.',
+    'Novedades en el Centro de Recursos de Amauta: ya está disponible un nuevo material para que lo descargues y lo uses.',
     '',
     `${data.categoryLabel.toUpperCase()}`,
     data.title,
