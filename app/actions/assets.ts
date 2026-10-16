@@ -36,11 +36,17 @@ export async function getAssetsForUser(category?: string): Promise<Asset[]> {
     filters.push(arrayContains(assets.visibility, [user.role]))
   }
 
-  return db
+  const rows = await db
     .select()
     .from(assets)
     .where(filters.length ? and(...filters) : undefined)
-    .orderBy(desc(assets.createdAt))
+  return sortByTitle(rows)
+}
+
+const titleCollator = new Intl.Collator('es', { sensitivity: 'base', numeric: true })
+
+function sortByTitle(rows: Asset[]): Asset[] {
+  return rows.sort((a, b) => titleCollator.compare(a.title, b.title))
 }
 
 // Fecha de la última carga de archivos visible para el usuario actual (los
@@ -76,7 +82,7 @@ export async function getAssetCounts(): Promise<Record<string, number>> {
 // Todos los assets (solo admin) para el panel de administración.
 export async function getAllAssets(): Promise<Asset[]> {
   await requireAdmin()
-  return db.select().from(assets).orderBy(desc(assets.createdAt))
+  return sortByTitle(await db.select().from(assets))
 }
 
 // Datos del archivo ya subido a Vercel Blob desde el navegador.

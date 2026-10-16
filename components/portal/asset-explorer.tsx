@@ -57,7 +57,9 @@ export function AssetExplorer({
   const tags = useMemo(() => {
     const set = new Set<string>()
     assets.forEach((a) => a.tags?.forEach((t) => set.add(t)))
-    return Array.from(set).sort()
+    return Array.from(set).sort((a, b) =>
+      a.localeCompare(b, 'es', { sensitivity: 'base', numeric: true }),
+    )
   }, [assets])
 
   const [active, setActive] = useState<string>('Todos')
