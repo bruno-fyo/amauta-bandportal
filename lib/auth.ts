@@ -5,6 +5,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import { db } from './db'
 import { user as userTable, account as accountTable } from './db/schema'
 import { sendPasswordResetEmail } from './email'
+import { insertActivity } from './activity'
 
 // ¿El email pertenece a una cuenta LOCAL (con credencial email+contraseña)?
 // Devuelve false para emails inexistentes y para cuentas que solo usan
@@ -95,6 +96,42 @@ export const auth = betterAuth({
       },
     }),
   ],
+  // Cada sesión nueva de Better Auth es un ingreso con email y contraseña.
+  databaseHooks: {
+    session: {
+      create: {
+        after: async (session) => {
+          try {
+            const [u] = await db
+              .select({
+                id: userTable.id,
+                email: userTable.email,
+                name: userTable.name,
+                role: userTable.role,
+              })
+              .from(userTable)
+              .where(eq(userTable.id, session.userId))
+              .limit(1)
+            if (!u) return
+            await db
+              .update(userTable)
+              .set({ lastLoginAt: new Date() })
+              .where(eq(userTable.id, u.id))
+            await insertActivity(
+              u,
+              { type: 'login', detail: 'Email y contraseña' },
+              {
+                ipAddress: session.ipAddress ?? null,
+                userAgent: session.userAgent?.slice(0, 500) ?? null,
+              },
+            )
+          } catch (err) {
+            console.error('[activity] no se pudo registrar el ingreso:', err)
+          }
+        },
+      },
+    },
+  },
   user: {
     additionalFields: {
       role: {

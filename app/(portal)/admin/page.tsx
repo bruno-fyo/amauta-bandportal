@@ -1,4 +1,5 @@
-import { FileStack, Users, ShieldCheck, FileText } from 'lucide-react'
+import Link from 'next/link'
+import { Activity, ArrowRight, FileStack, Users, ShieldCheck, FileText } from 'lucide-react'
 import { PageHeader, SectionHeading } from '@/components/portal/section-heading'
 import { AssetUploadForm } from '@/components/admin/asset-upload-form'
 import { AssetTable } from '@/components/admin/asset-table'
@@ -68,6 +69,24 @@ export default async function AdminPage() {
         title="Panel de Administración"
         description={`Gestioná los recursos del portal y los permisos de acceso. Sesión de ${ROLE_LABELS[admin.role]}.`}
       />
+
+      <Link
+        href="/admin/actividad"
+        className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary"
+      >
+        <span className="flex items-center gap-4">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-secondary text-primary">
+            <Activity className="size-5" aria-hidden="true" />
+          </span>
+          <span>
+            <span className="block font-semibold text-foreground">Actividad de usuarios</span>
+            <span className="block text-sm text-muted-foreground">
+              Ingresos, materiales vistos y descargas de cada usuario.
+            </span>
+          </span>
+        </span>
+        <ArrowRight className="size-5 text-muted-foreground" aria-hidden="true" />
+      </Link>
 
       {/* Stats */}
       <div className="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

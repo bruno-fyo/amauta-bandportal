@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { assets } from '@/lib/db/schema'
 import { getCurrentUser } from '@/lib/session'
+import { logActivity } from '@/lib/activity'
 
 // Sirve un material almacenado en un Blob privado.
 // Verifica sesión y visibilidad por rol antes de transmitir el archivo.
@@ -44,6 +45,22 @@ export async function GET(
     // con ?download=1 se fuerza la descarga del archivo.
     const forceDownload = request.nextUrl.searchParams.get('download') === '1'
     const disposition = forceDownload ? 'attachment' : 'inline'
+
+    // Las miniaturas usan esta misma ruta sin parámetros, así que solo se
+    // registran las descargas y las aperturas explícitas con "Ver" (?view=1).
+    const isView = request.nextUrl.searchParams.get('view') === '1'
+    if (forceDownload || isView) {
+      logActivity(
+        user,
+        {
+          type: forceDownload ? 'asset_download' : 'asset_view',
+          assetId: asset.id,
+          target: asset.title,
+          detail: asset.category,
+        },
+        request.headers,
+      )
+    }
     const headers = new Headers()
     headers.set('Content-Type', result.blob.contentType || 'application/octet-stream')
     headers.set(
