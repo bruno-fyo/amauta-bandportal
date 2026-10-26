@@ -2,8 +2,15 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { get } from '@vercel/blob'
 import { and, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { productFichas, FICHA_COUNTRIES, type FichaCountry } from '@/lib/db/schema'
+import {
+  productFichas,
+  products,
+  FICHA_COUNTRIES,
+  FICHA_COUNTRY_LABELS,
+  type FichaCountry,
+} from '@/lib/db/schema'
 import { getCurrentUser } from '@/lib/session'
+import { logActivity } from '@/lib/activity'
 
 // Sirve la ficha técnica (PDF) de un producto y país desde un Blob privado.
 // Requiere sesión: las fichas son visibles para todo el portal.
@@ -41,6 +48,23 @@ export async function GET(
     // Por defecto se abre en línea (previsualización); con ?download=1 se descarga.
     const forceDownload = request.nextUrl.searchParams.get('download') === '1'
     const disposition = forceDownload ? 'attachment' : 'inline'
+
+    if (forceDownload) {
+      const [product] = await db
+        .select({ name: products.name })
+        .from(products)
+        .where(eq(products.slug, slug))
+        .limit(1)
+      logActivity(
+        user,
+        {
+          type: 'ficha_download',
+          target: product?.name ?? slug,
+          detail: FICHA_COUNTRY_LABELS[country],
+        },
+        request.headers,
+      )
+    }
     const headers = new Headers()
     headers.set('Content-Type', result.blob.contentType || 'application/pdf')
     headers.set(

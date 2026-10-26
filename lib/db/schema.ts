@@ -225,6 +225,28 @@ export const products = pgTable('products', {
 
 export type ProductRow = typeof products.$inferSelect
 
+// ---------------------------------------------------------------------------
+// Registro de actividad (ingresos y descargas). Guarda una copia del email,
+// nombre y rol al momento del evento para que el historial no cambie si el
+// usuario se edita o se elimina. Creada por scripts/migrate-activity-log.mjs.
+// ---------------------------------------------------------------------------
+export const activityLog = pgTable('activity_log', {
+  id: serial('id').primaryKey(),
+  userId: text('userId'),
+  userEmail: text('userEmail').notNull(),
+  userName: text('userName'),
+  userRole: text('userRole').notNull(),
+  type: text('type').notNull(),
+  assetId: integer('assetId'),
+  target: text('target'),
+  detail: text('detail'),
+  ipAddress: text('ipAddress'),
+  userAgent: text('userAgent'),
+  createdAt: timestamp('createdAt').defaultNow().notNull(),
+})
+
+export type ActivityRow = typeof activityLog.$inferSelect
+
 export type Role = 'admin' | 'distribuidor' | 'colaborador'
 export const ROLES: Role[] = ['admin', 'distribuidor', 'colaborador']
 export const ROLE_LABELS: Record<Role, string> = {

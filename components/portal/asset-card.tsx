@@ -66,7 +66,7 @@ export function AssetCard({ asset }: { asset: Asset }) {
           <div className="mt-1 flex gap-2">
             {canPreview ? (
               <a
-                href={`/api/assets/${asset.id}/download`}
+                href={`/api/assets/${asset.id}/download?view=1`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-transparent text-sm font-semibold text-foreground transition-colors hover:bg-secondary"

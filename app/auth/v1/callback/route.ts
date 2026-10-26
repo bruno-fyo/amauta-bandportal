@@ -16,6 +16,7 @@ import {
   SESSION_MAX_AGE,
   signSession,
 } from '@/lib/session-token'
+import { logActivity } from '@/lib/activity'
 
 const HANDSHAKE_COOKIES = ['b2c_verifier', 'b2c_state', 'b2c_nonce'] as const
 
@@ -97,8 +98,10 @@ export async function GET(request: Request) {
   }
 
   let userId: string
+  let loggedRole: Role = 'colaborador'
   if (record) {
     userId = record.id
+    loggedRole = colaborador && record.role !== 'admin' ? 'colaborador' : (record.role as Role)
     const updates: Partial<typeof user.$inferInsert> = {
       b2cId,
       lastLoginAt: now,
@@ -127,6 +130,12 @@ export async function GET(request: Request) {
 
   // 3) Crear la sesión propia del Centro de Recursos y redirigir a la home.
   // La cookie de sesión + el borrado del handshake van sobre el MISMO response.
+  logActivity(
+    { id: userId, email: record?.email ?? email, name: record?.name ?? name, role: loggedRole },
+    { type: 'login', detail: 'Microsoft' },
+    request.headers,
+  )
+
   const token = await signSession({ userId, b2cId })
   const res = NextResponse.redirect(new URL('/', url.origin))
   res.cookies.set(SESSION_COOKIE, token, {
