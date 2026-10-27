@@ -152,7 +152,6 @@ export async function saveAssetRecord(input: NewAssetInput): Promise<SaveAssetRe
         url: `${await getBaseUrl()}${meta?.href ?? '/'}`,
       },
       visibility,
-      { email: admin.email, name: admin.name },
     )
 
     return result.ok

@@ -53,23 +53,16 @@ async function getRecipients(visibility: Role[]) {
   })
 }
 
-// Modo prueba: el aviso le llega solo al admin que está cargando el material.
-// Pasar a false para enviarlo a todos los usuarios según la visibilidad.
-const TEST_MODE = true
-
 export async function notifyUsersOfNewAsset(
   asset: AssetNotificationData,
   visibility: Role[],
-  uploader: { email: string; name: string },
 ): Promise<NotifyResult> {
   const url = process.env.N8N_ASSET_NOTIFY_WEBHOOK_URL
   const secret =
     process.env.N8N_ASSET_NOTIFY_WEBHOOK_SECRET ??
     process.env.N8N_PASSWORD_RESET_WEBHOOK_SECRET
 
-  const recipients = TEST_MODE
-    ? [{ email: uploader.email, name: uploader.name }]
-    : await getRecipients(visibility)
+  const recipients = await getRecipients(visibility)
   if (recipients.length === 0) return { ok: true, sent: 0 }
 
   const { subject, html, text } = buildAssetNotificationEmail(asset)
