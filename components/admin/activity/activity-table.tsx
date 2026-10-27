@@ -27,7 +27,7 @@ export function ActivityTable({
   if (rows.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-        No hay eventos para estos filtros.
+        No hay actividad para estos filtros.
       </div>
     )
   }
@@ -40,7 +40,7 @@ export function ActivityTable({
             <tr>
               <th scope="col" className="px-4 py-3 font-semibold">Fecha</th>
               <th scope="col" className="px-4 py-3 font-semibold">Usuario</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Evento</th>
+              <th scope="col" className="px-4 py-3 font-semibold">Actividad</th>
               <th scope="col" className="px-4 py-3 font-semibold">Material</th>
               <th scope="col" className="px-4 py-3 font-semibold">Dispositivo</th>
             </tr>
@@ -93,7 +93,7 @@ export function ActivityTable({
 
       <nav aria-label="Paginación" className="flex items-center justify-between text-sm">
         <p className="text-muted-foreground">
-          {total.toLocaleString('es-AR')} eventos · página {filters.page} de {pages}
+          {total.toLocaleString('es-AR')} actividades · página {filters.page} de {pages}
         </p>
         <div className="flex gap-2">
           {filters.page > 1 ? (

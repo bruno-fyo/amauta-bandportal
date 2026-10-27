@@ -35,7 +35,7 @@ export function ActivityFiltersForm({ filters }: { filters: ActivityFilters }) {
           </select>
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
-          Evento
+          Actividad
           <select name="type" defaultValue={filters.type} className={fieldClass}>
             <option value="">Todos</option>
             <option value="descargas">Todas las descargas</option>
