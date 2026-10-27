@@ -117,7 +117,7 @@ export default async function ActividadPage({
 
       <section className="mb-12">
         <SectionHeading
-          title="Registro de eventos"
+          title="Registro de actividad"
           description="Tocá un usuario para ver solo su actividad."
         />
         <ActivityTable rows={events.rows} total={events.total} filters={filters} />

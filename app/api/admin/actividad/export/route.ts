@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const filters = parseActivityFilters(Object.fromEntries(request.nextUrl.searchParams))
   const rows = await getAllActivityEvents(filters)
 
-  const header = ['Fecha', 'Nombre', 'Email', 'Rol', 'Evento', 'Material', 'Detalle', 'Dispositivo', 'IP']
+  const header = ['Fecha', 'Nombre', 'Email', 'Rol', 'Actividad', 'Material', 'Detalle', 'Dispositivo', 'IP']
   const lines = rows.map((r) =>
     [
       formatDateTimeAR(r.createdAt),
